@@ -50,7 +50,9 @@ export const schemas = {
 
   password(val) {
     if (typeof val !== 'string') return fail('Password is required');
-    if (val.length < 4) return fail('Password must be at least 4 characters');
+    if (val.length < 8) return fail('Password must be at least 8 characters');
+    if (!/[A-Z]/.test(val)) return fail('Password must include at least one uppercase letter');
+    if (!/[0-9]/.test(val)) return fail('Password must include at least one number');
     return ok(val);
   },
 

@@ -73,10 +73,14 @@ export async function PATCH(request, { params }) {
     if (typeof update.bio === 'string') update.bio = sanitizeString(update.bio, 500);
     if (typeof update.location === 'string') update.location = sanitizeString(update.location, 100);
 
-    // Admin-only fields
+    // Admin-only fields with enum validation
     if (authUser.role === 'admin') {
-      if (body.role !== undefined) update.role = body.role;
-      if (body.status !== undefined) update.status = body.status;
+      if (body.role !== undefined && ['admin', 'user'].includes(body.role)) {
+        update.role = body.role;
+      }
+      if (body.status !== undefined && ['active', 'inactive', 'suspended', 'pending'].includes(body.status)) {
+        update.status = body.status;
+      }
     }
 
     const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true });

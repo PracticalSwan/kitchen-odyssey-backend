@@ -10,7 +10,7 @@ export function getCorsHeaders(request) {
   );
 
   const headers = {
-    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Credentials': isAllowed ? 'true' : 'false',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Guest-ID, X-CSRF-Token',
     'Access-Control-Max-Age': '86400',

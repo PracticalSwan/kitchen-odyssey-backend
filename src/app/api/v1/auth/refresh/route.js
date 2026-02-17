@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db.js';
 import { successResponse, errorResponse, safeErrorResponse } from '@/lib/response.js';
 import { verifyToken, generateAccessToken, setAuthCookies } from '@/lib/auth.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
+import { rateLimit, rateLimitResponse } from '@/lib/rateLimit.js';
 import { User } from '@/models/index.js';
 import { cookies } from 'next/headers';
 
@@ -11,6 +12,9 @@ export async function OPTIONS(request) {
 
 export async function POST(request) {
   const cors = getCorsHeaders(request);
+
+  const limit = await rateLimit('auth')(request);
+  if (!limit.allowed) return rateLimitResponse(cors);
 
   try {
     await connectDB();

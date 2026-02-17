@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db.js';
 import { successResponse, safeErrorResponse } from '@/lib/response.js';
 import { requireRole, requireAuth } from '@/lib/auth.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
+import { rateLimit, rateLimitResponse } from '@/lib/rateLimit.js';
 import { sanitizeString } from '@/lib/validate.js';
 import { ActivityLog } from '@/models/index.js';
 
@@ -41,6 +42,9 @@ export async function GET(request) {
 // POST /api/v1/activity — Record activity entry (auth required)
 export async function POST(request) {
   const cors = getCorsHeaders(request);
+
+  const limit = await rateLimit('write')(request);
+  if (!limit.allowed) return rateLimitResponse(cors);
 
   try {
     await connectDB();

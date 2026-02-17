@@ -2,7 +2,7 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
-![Vitest Tests](https://img.shields.io/badge/Tests-82%20Passing-green)
+![Vitest Tests](https://img.shields.io/badge/Tests-87%20Passing-green)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
 API backend for Kitchen Odyssey — built with Next.js 16 App Router, MongoDB Atlas, and comprehensive security features.
@@ -16,6 +16,7 @@ Kitchen Odyssey Backend provides a RESTful API for the recipe-sharing platform w
 **Authentication & Security**
 - JWT tokens in HttpOnly cookies (access: 15min, refresh: 7d)
 - bcrypt password hashing (10 rounds)
+- Login validates email format plus non-empty password; password complexity is enforced during signup
 - Role-based access control (Admin, Contributor, Guest/Pending)
 - In-memory rate limiting (sliding window: auth 20/15min, write 50/15min, read 100/15min)
 - Input validation with schema-based sanitization
@@ -112,7 +113,7 @@ npm run start
 | POST | `/api/v1/recipes/:id/view` | No | Record view (author/active only) |
 | GET | `/api/v1/recipes/:id/reviews` | No | List reviews for recipe |
 | POST | `/api/v1/recipes/:id/reviews` | Yes | Add or update review |
-| DELETE | `/api/v1/recipes/:id/reviews/:reviewId` | Yes | Delete review (owner or admin) |
+| DELETE | `/api/v1/reviews/:id` | Yes | Delete review (owner or admin) |
 | GET | `/api/v1/recipes/:id/rating` | No | Get average rating for recipe |
 | GET | `/api/v1/recipes/random-suggestion` | No | Get random recipe (quality-based) |
 
@@ -202,7 +203,7 @@ npm run test:watch    # Watch mode (auto-rerun on changes)
 npm run test:coverage # With coverage report
 ```
 
-**Test Coverage: 82 tests**
+**Test Coverage: 87 tests**
 - Authentication flows (signup, login, logout, refresh)
 - Recipe CRUD operations
 - Engagement features (likes, favorites, reviews)
@@ -317,4 +318,3 @@ npm run start
 - Vercel (recommended for Next.js)
 - Railway, Render, or other Node.js hosting
 - Azure App Service with Node.js runtime
-

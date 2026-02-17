@@ -4,7 +4,13 @@ import { randomUUID } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { connectDB } from './db.js';
 
-const JWT_SECRET = () => process.env.JWT_SECRET;
+const JWT_SECRET = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be set and at least 32 characters');
+  }
+  return secret;
+};
 const COOKIE_ACCESS = 'ko_access';
 const COOKIE_REFRESH = 'ko_refresh';
 const COOKIE_CSRF = 'ko_csrf';

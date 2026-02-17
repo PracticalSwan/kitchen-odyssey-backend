@@ -67,6 +67,13 @@ export async function PATCH(request, { params }) {
       if (body[field] !== undefined) recipe[field] = body[field];
     }
 
+    // Validate numeric fields
+    if (body.prepTime !== undefined) recipe.prepTime = Number.isFinite(Number(body.prepTime)) ? Math.max(0, Number(body.prepTime)) : recipe.prepTime;
+    if (body.cookTime !== undefined) recipe.cookTime = Number.isFinite(Number(body.cookTime)) ? Math.max(0, Number(body.cookTime)) : recipe.cookTime;
+    if (body.servings !== undefined) recipe.servings = Number.isFinite(Number(body.servings)) ? Math.max(1, Math.round(Number(body.servings))) : recipe.servings;
+    // Validate difficulty enum
+    if (body.difficulty !== undefined && !['Easy', 'Medium', 'Hard'].includes(body.difficulty)) recipe.difficulty = recipe.difficulty;
+
     if (typeof recipe.title === 'string') recipe.title = sanitizeString(recipe.title, 100);
     if (typeof recipe.description === 'string') recipe.description = sanitizeString(recipe.description, 1000);
     if (typeof recipe.category === 'string') recipe.category = sanitizeString(recipe.category, 100);
@@ -83,9 +90,12 @@ export async function PATCH(request, { params }) {
       recipe.instructions = recipe.instructions.map((step) => sanitizeString(step || '', 1000));
     }
 
-    // Admin can update status
+    // Admin can update status (validated enum)
     if (authUser.role === 'admin' && body.status !== undefined) {
-      recipe.status = body.status;
+      const validStatuses = ['published', 'pending', 'rejected', 'draft'];
+      if (validStatuses.includes(body.status)) {
+        recipe.status = body.status;
+      }
     }
 
     await recipe.save();

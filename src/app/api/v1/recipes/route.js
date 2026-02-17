@@ -19,9 +19,13 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '30', 10)));
-    const sort = searchParams.get('sort') || 'newest';
+    const VALID_SORTS = ['newest', 'trending', 'rating', 'title'];
+    const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
+    const sortParam = searchParams.get('sort') || 'newest';
+    const sort = VALID_SORTS.includes(sortParam) ? sortParam : 'newest';
     const category = searchParams.get('category');
-    const difficulty = searchParams.get('difficulty');
+    const difficultyParam = searchParams.get('difficulty');
+    const difficulty = difficultyParam && VALID_DIFFICULTIES.includes(difficultyParam) ? difficultyParam : null;
     const search = sanitizeString(searchParams.get('search') || '', 200);
     const status = searchParams.get('status');
     const authorId = searchParams.get('authorId');
@@ -41,7 +45,7 @@ export async function GET(request) {
     }
 
     if (category) filter.category = category;
-    if (difficulty) filter.difficulty = difficulty;
+    if (difficulty) filter.difficulty = difficulty; // already validated above
     if (authorId) filter.authorId = authorId;
     if (search) {
       filter.$text = { $search: search };
@@ -145,10 +149,10 @@ export async function POST(request) {
       title: sanitizeString(body.title || '', 100),
       description: sanitizeString(body.description || '', 1000),
       category: sanitizeString(body.category || '', 100),
-      prepTime: body.prepTime,
-      cookTime: body.cookTime,
-      servings: body.servings,
-      difficulty: body.difficulty,
+      prepTime: Number.isFinite(Number(body.prepTime)) ? Math.max(0, Number(body.prepTime)) : 0,
+      cookTime: Number.isFinite(Number(body.cookTime)) ? Math.max(0, Number(body.cookTime)) : 0,
+      servings: Number.isFinite(Number(body.servings)) ? Math.max(1, Math.round(Number(body.servings))) : 1,
+      difficulty: ['Easy', 'Medium', 'Hard'].includes(body.difficulty) ? body.difficulty : 'Easy',
       ingredients: Array.isArray(body.ingredients)
         ? body.ingredients.map((item) => ({
           name: sanitizeString(item?.name || '', 100),

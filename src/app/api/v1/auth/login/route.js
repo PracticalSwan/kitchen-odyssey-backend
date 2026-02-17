@@ -22,9 +22,11 @@ export async function POST(request) {
     const { email, password } = await request.json();
 
     const emailCheck = schemas.email(email);
-    const passCheck = schemas.password(password);
     if (!emailCheck.valid) return errorResponse('VALIDATION_ERROR', emailCheck.error, 400, null, cors);
-    if (!passCheck.valid) return errorResponse('VALIDATION_ERROR', passCheck.error, 400, null, cors);
+
+    if (typeof password !== 'string' || password.length === 0) {
+      return errorResponse('VALIDATION_ERROR', 'Password is required', 400, null, cors);
+    }
 
     const user = await User.findOne({ email: emailCheck.value });
     if (!user) {

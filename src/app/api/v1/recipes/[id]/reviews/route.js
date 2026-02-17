@@ -4,7 +4,7 @@ import { requireActiveUser } from '@/lib/auth.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
 import { rateLimit, rateLimitResponse } from '@/lib/rateLimit.js';
 import { sanitizeString } from '@/lib/validate.js';
-import { Recipe, Review } from '@/models/index.js';
+import { Recipe, Review, User } from '@/models/index.js';
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -35,8 +35,24 @@ export async function GET(request, { params }) {
       Review.countDocuments({ recipeId: id }),
     ]);
 
+    // Populate user data (username, avatar) for each review
+    const userIds = [...new Set(reviews.map(r => r.userId))];
+    const users = await User.find({ _id: { $in: userIds } })
+      .select('_id username avatarUrl avatarThumbnailUrl')
+      .lean();
+    const userMap = Object.fromEntries(users.map(u => [u._id, u]));
+
+    const enrichedReviews = reviews.map(review => {
+      const user = userMap[review.userId];
+      return {
+        ...review,
+        username: user?.username || 'Unknown User',
+        avatar: user?.avatarUrl || user?.avatarThumbnailUrl || null,
+      };
+    });
+
     return successResponse(
-      { reviews, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } },
+      { reviews: enrichedReviews, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } },
       null,
       200,
       cors,
@@ -71,7 +87,7 @@ export async function POST(request, { params }) {
     }
 
     // Upsert: one review per user per recipe
-    const reviewId = `review-${Date.now()}`;
+    const reviewId = `review-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const review = await Review.findOneAndUpdate(
       { recipeId: id, userId: authUser.userId },
       {
@@ -81,7 +97,18 @@ export async function POST(request, { params }) {
       { upsert: true, new: true, runValidators: true },
     );
 
-    return successResponse({ review: review.toJSON() }, 'Review saved', 201, cors);
+    // Populate user data for the response
+    const user = await User.findById(authUser.userId)
+      .select('_id username avatarUrl avatarThumbnailUrl')
+      .lean();
+
+    const reviewWithUser = {
+      ...review.toJSON(),
+      username: user?.username || 'Unknown User',
+      avatar: user?.avatarUrl || user?.avatarThumbnailUrl || null,
+    };
+
+    return successResponse({ review: reviewWithUser }, 'Review saved', 201, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
   }
