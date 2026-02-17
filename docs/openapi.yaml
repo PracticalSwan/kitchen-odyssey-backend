@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: Kitchen Odyssey Backend API
+  version: 1.0.0
+  description: API contract for Kitchen Odyssey migration backend.
+servers:
+  - url: http://localhost:3000/api/v1
+paths:
+  /health:
+    get:
+      summary: Service health check
+      responses:
+        '200':
+          description: Service is healthy
+  /auth/login:
+    post:
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { description: Login success }
+        '401': { description: Invalid credentials }
+  /auth/signup:
+    post:
+      summary: Create account
+      responses:
+        '201': { description: Signup success }
+  /auth/logout:
+    post:
+      summary: Logout current session
+      responses:
+        '200': { description: Logged out }
+  /auth/logout-all:
+    post:
+      summary: Invalidate all sessions
+      responses:
+        '200': { description: All sessions invalidated }
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      responses:
+        '200': { description: Token refreshed }
+  /auth/me:
+    get:
+      summary: Get current authenticated user
+      responses:
+        '200': { description: Current user payload }
+  /users:
+    get:
+      summary: List users (admin full, public-safe otherwise)
+      responses:
+        '200': { description: User list }
+  /users/{id}:
+    get:
+      summary: Get user profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: User payload }
+    patch:
+      summary: Update user profile
+      responses:
+        '200': { description: Profile updated }
+    delete:
+      summary: Delete user with cascade cleanup
+      responses:
+        '200': { description: User deleted }
+  /recipes:
+    get:
+      summary: List recipes
+      responses:
+        '200': { description: Recipe list }
+    post:
+      summary: Create recipe
+      responses:
+        '201': { description: Recipe created }
+  /recipes/{id}:
+    get:
+      summary: Get recipe by id
+      responses:
+        '200': { description: Recipe payload }
+    patch:
+      summary: Update recipe
+      responses:
+        '200': { description: Recipe updated }
+    delete:
+      summary: Delete recipe with cascade cleanup
+      responses:
+        '200': { description: Recipe deleted }
+  /recipes/{id}/like:
+    post:
+      summary: Toggle like
+      responses:
+        '200': { description: Like toggled }
+  /recipes/{id}/favorite:
+    post:
+      summary: Toggle favorite
+      responses:
+        '200': { description: Favorite toggled }
+  /recipes/{id}/reviews:
+    get:
+      summary: List recipe reviews
+      responses:
+        '200': { description: Reviews list }
+    post:
+      summary: Add or update review
+      responses:
+        '201': { description: Review saved }
+  /recipes/{id}/view:
+    post:
+      summary: Record recipe view
+      responses:
+        '200': { description: View recorded }
+  /recipes/{id}/rating:
+    get:
+      summary: Get aggregate rating
+      responses:
+        '200': { description: Rating payload }
+  /recipes/random-suggestion:
+    get:
+      summary: Fetch random recipe suggestion
+      responses:
+        '200': { description: Suggestion payload }
+  /upload/recipe-image:
+    post:
+      summary: Upload recipe image
+      responses:
+        '201': { description: Image uploaded }
+  /upload/user-avatar:
+    post:
+      summary: Upload user avatar
+      responses:
+        '201': { description: Avatar uploaded }
+  /upload/image/{path}:
+    delete:
+      summary: Delete uploaded image by storage path
+      responses:
+        '200': { description: Image deleted }
+  /search-history:
+    get:
+      summary: List current user search history
+      responses:
+        '200': { description: Search history }
+    post:
+      summary: Record search query
+      responses:
+        '201': { description: Search recorded }
+    delete:
+      summary: Clear search history
+      responses:
+        '200': { description: Search history cleared }
+  /activity:
+    get:
+      summary: List activity entries
+      responses:
+        '200': { description: Activity list }
+    post:
+      summary: Record activity entry
+      responses:
+        '201': { description: Activity recorded }
+  /stats/daily:
+    get:
+      summary: Daily stats for admin dashboard
+      responses:
+        '200': { description: Daily stats payload }
