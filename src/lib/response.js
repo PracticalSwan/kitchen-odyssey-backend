@@ -16,8 +16,22 @@ export function errorResponse(code, message, status = 400, details = null, heade
 }
 
 // Common error helpers — all accept optional headers as last arg
+function isLikelyHeaders(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const keys = Object.keys(value);
+  return keys.some((key) => {
+    const lower = key.toLowerCase();
+    return lower.startsWith('access-control-') || lower === 'vary';
+  });
+}
+
 export const errors = {
-  validation: (message, details, headers) => errorResponse('VALIDATION_ERROR', message, 400, details, headers),
+  validation: (message, detailsOrHeaders = null, maybeHeaders = {}) => {
+    if (isLikelyHeaders(detailsOrHeaders) && (!maybeHeaders || Object.keys(maybeHeaders).length === 0)) {
+      return errorResponse('VALIDATION_ERROR', message, 400, null, detailsOrHeaders);
+    }
+    return errorResponse('VALIDATION_ERROR', message, 400, detailsOrHeaders, maybeHeaders);
+  },
   unauthorized: (message = 'Authentication required', headers) => errorResponse('UNAUTHORIZED', message, 401, null, headers),
   forbidden: (message = 'Access denied', headers) => errorResponse('FORBIDDEN', message, 403, null, headers),
   notFound: (message = 'Resource not found', headers) => errorResponse('NOT_FOUND', message, 404, null, headers),

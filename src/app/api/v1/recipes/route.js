@@ -47,24 +47,69 @@ export async function GET(request) {
       filter.$text = { $search: search };
     }
 
-    // Sort options
-    let sortObj = { createdAt: -1 }; // newest default
-    if (sort === 'trending') {
-      sortObj = { 'likedBy': -1, createdAt: -1 }; // by likes then recency
-    } else if (sort === 'rating') {
-      sortObj = { createdAt: -1 }; // will be enhanced with aggregation later
-    } else if (sort === 'title') {
-      sortObj = { title: 1 };
-    }
+    const needsAggregateSort = sort === 'trending' || sort === 'rating';
 
-    const [recipes, total] = await Promise.all([
-      Recipe.find(filter)
-        .sort(sortObj)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      Recipe.countDocuments(filter),
-    ]);
+    let recipes;
+    let total;
+
+    if (needsAggregateSort) {
+      const pipeline = [
+        { $match: filter },
+        {
+          $addFields: {
+            likeCount: { $size: { $ifNull: ['$likedBy', []] } },
+          },
+        },
+      ];
+
+      if (sort === 'rating') {
+        pipeline.push(
+          {
+            $lookup: {
+              from: 'reviews',
+              localField: '_id',
+              foreignField: 'recipeId',
+              as: '_reviews',
+            },
+          },
+          {
+            $addFields: {
+              averageRating: { $ifNull: [{ $avg: '$_reviews.rating' }, 0] },
+              reviewCount: { $size: '$_reviews' },
+            },
+          },
+          { $project: { _reviews: 0 } },
+          { $sort: { averageRating: -1, reviewCount: -1, likeCount: -1, createdAt: -1 } },
+        );
+      } else {
+        pipeline.push({ $sort: { likeCount: -1, createdAt: -1 } });
+      }
+
+      pipeline.push(
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+      );
+
+      [recipes, total] = await Promise.all([
+        Recipe.aggregate(pipeline),
+        Recipe.countDocuments(filter),
+      ]);
+    } else {
+      // Default sort options for simple query path.
+      let sortObj = { createdAt: -1 }; // newest default
+      if (sort === 'title') {
+        sortObj = { title: 1 };
+      }
+
+      [recipes, total] = await Promise.all([
+        Recipe.find(filter)
+          .sort(sortObj)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .lean(),
+        Recipe.countDocuments(filter),
+      ]);
+    }
 
     return successResponse(
       { recipes, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } },

@@ -2,18 +2,26 @@
 import { config } from './config.js';
 
 export function getCorsHeaders(request) {
-  const origin = request.headers.get('origin') || '';
+  const origin = request.headers.get('origin');
   const allowedOrigins = config.cors.allowedOrigins;
 
-  const isAllowed = allowedOrigins.includes(origin);
+  const isAllowed = Boolean(origin) && (
+    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
+  );
 
-  return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : '',
+  const headers = {
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Guest-ID, X-CSRF-Token',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   };
+
+  if (isAllowed) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+
+  return headers;
 }
 
 // OPTIONS preflight handler for route files

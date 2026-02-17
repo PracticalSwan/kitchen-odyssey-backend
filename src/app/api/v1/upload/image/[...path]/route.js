@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/db.js';
-import { requireAuth } from '@/lib/auth.js';
+import { requireRole } from '@/lib/auth.js';
 import { errors, safeErrorResponse, successResponse } from '@/lib/response.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
 import { deleteFileIfExists, resolveUploadPath } from '@/lib/files.js';
@@ -14,7 +14,7 @@ export async function DELETE(request, { params }) {
 
   try {
     await connectDB();
-    await requireAuth(request);
+    await requireRole(request, 'admin');
 
     const { path: pathSegments } = await params;
     const relativePath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;

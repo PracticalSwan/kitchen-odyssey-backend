@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/db.js';
-import { successResponse, safeErrorResponse } from '@/lib/response.js';
+import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireAuth } from '@/lib/auth.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
 import { User } from '@/models/index.js';
@@ -17,7 +17,7 @@ export async function GET(request) {
 
     const user = await User.findById(authUser.userId);
     if (!user) {
-      return successResponse(null, 'User not found', 404, cors);
+      return errors.notFound('User not found', cors);
     }
 
     return successResponse({ user: user.toJSON() }, null, 200, cors);

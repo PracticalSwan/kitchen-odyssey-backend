@@ -49,5 +49,19 @@
 - Phase 6: Security & observability (rate limiting, validation, logging, security headers, 33 new tests) DONE
 - Phase 7: Azure deployment (excluded per user request) NOT STARTED
 
+## Seed Data
+
+**Script:** `src/scripts/seed.js` (run with `node src/scripts/seed.js --clean`)
+**Database:** `kitchen_odyssey` on Atlas cluster `kitchen-odyssey.xwygind.mongodb.net`
+
+Seeded data (migrated from `Kitchen_Odyssey/src/lib/storage.js`):
+- **12 users** (3 admins + 9 regular) — passwords bcrypt-hashed (10 rounds)
+- **13 recipes** — real Unsplash images downloaded to `uploads/`, thumbnails in `uploads/thumbnails/`
+- **12 reviews** — sample ratings/comments across recipes
+- **8 activity logs** — sample entries (some may expire via 90-day TTL index)
+- **12 avatar PNGs** — DiceBear avatars rendered to `uploads/`
+
+Image storage: local filesystem (`uploads/` directory), served via `IMAGE_PUBLIC_URL_BASE`.
+
 ## Last Updated
-2026-02-18 — Phase 6 complete, 82 tests passing
+2026-02-18 — Phase 6 complete, 82 tests passing, MongoDB seeded with all localStorage data
