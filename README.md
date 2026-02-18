@@ -282,10 +282,31 @@ export default mongoose.models.NewModel || mongoose.model('NewModel', schema);
 
 ## Troubleshooting
 
+**MongoDB Connection Issues (Too Many Connections)**
+- **Symptom**: Atlas shows 500+ active connections, cluster becomes slow/unresponsive
+- **Root Cause**: Orphaned Node.js processes or excessive connection pool size
+- **Fix**: Kill orphaned Node processes and reduce pool size
+
+  ```bash
+  # Kill orphaned Node processes (Windows PowerShell)
+  Get-Process node | ForEach-Object { Stop-Process -Id $_.Id -Force }
+
+  # Set lower pool size in .env.local
+  MONGODB_MAX_POOL_SIZE=5
+  MONGODB_MIN_POOL_SIZE=1
+
+  MONGODB_SOCKET_TIMEOUT_MS=45000
+  MONGODB_CONNECT_TIMEOUT_MS=10000
+  ```
+
+- **Monitoring**: Use `/api/v1/monitoring` endpoint (admin only) to check connection stats
+- **Atlas Layer**: Enable "Serverless" or reduce cluster size if not needed
+
 **MongoDB Connection Failed**
 - Verify `MONGODB_URI` in `.env.local`
 - Check IP whitelist in MongoDB Atlas (allow `0.0.0.0/0` for development)
 - Ensure user has read/write permissions on database
+- Restart Next.js server after changing `.env.local`
 
 **JWT Invalid/Expired**
 - Check `JWT_SECRET` is consistent across restarts
