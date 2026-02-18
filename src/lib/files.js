@@ -1,7 +1,7 @@
 // File system utilities for upload path resolution and deletion
-import { unlink } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import { config } from '@/lib/config.js';
+import { unlink } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { config } from "@/lib/config.js";
 
 // Normalize upload directory to absolute path
 function normalizeUploadRoot() {
@@ -10,14 +10,14 @@ function normalizeUploadRoot() {
 
 // Normalize target path for safe file operations
 function normalizeTargetPath(targetPath) {
-  if (!targetPath || typeof targetPath !== 'string') return null;
+  if (!targetPath || typeof targetPath !== "string") return null;
   return resolve(targetPath);
 }
 
 // Resolve relative path within upload directory with security check
 export function resolveUploadPath(relativePath) {
   const uploadRoot = normalizeUploadRoot();
-  const target = resolve(uploadRoot, relativePath || '');
+  const target = resolve(uploadRoot, relativePath || "");
 
   // Prevent path traversal attacks
   if (!target.startsWith(uploadRoot)) {
@@ -29,13 +29,13 @@ export function resolveUploadPath(relativePath) {
 // Convert relative path to public image URL
 export function toPublicImageUrl(relativePath) {
   if (!relativePath) return null;
-  const safe = relativePath.replace(/\\/g, '/');
+  const safe = relativePath.replace(/\\/g, "/");
   return `${config.image.publicUrlBase}/${safe}`;
 }
 
 // Convert public URL back to absolute file system path
 export function absolutePathFromPublicUrl(url) {
-  if (!url || typeof url !== 'string') return null;
+  if (!url || typeof url !== "string") return null;
   const base = `${config.image.publicUrlBase}/`;
   if (!url.startsWith(base)) return null;
   const relativePath = url.slice(base.length);
@@ -51,17 +51,24 @@ export async function deleteFileIfExists(targetPath) {
     await unlink(filePath);
     return true;
   } catch (error) {
-    if (error?.code === 'ENOENT') return false;
+    if (error?.code === "ENOENT") return false;
     throw error;
   }
 }
 
 // Build full image and thumbnail path objects
-export function buildImagePaths(baseName, extension, thumbnailSuffix = '-thumb') {
+export function buildImagePaths(
+  baseName,
+  extension,
+  thumbnailSuffix = "-thumb",
+) {
   const fileName = `${baseName}${extension}`;
   const thumbName = `${baseName}${thumbnailSuffix}${extension}`;
   const imageRelativePath = fileName;
-  const thumbnailRelativePath = join(config.image.thumbnailDir, thumbName).replace(/\\/g, '/');
+  const thumbnailRelativePath = join(
+    config.image.thumbnailDir,
+    thumbName,
+  ).replace(/\\/g, "/");
 
   return {
     fileName,

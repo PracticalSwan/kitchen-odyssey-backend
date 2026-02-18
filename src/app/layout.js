@@ -1,7 +1,7 @@
 // Next.js root layout configuration for metadata and HTML structure
 export const metadata = {
-  title: 'Kitchen Odyssey API',
-  description: 'Kitchen Odyssey Backend API Server',
+  title: "Kitchen Odyssey API",
+  description: "Kitchen Odyssey Backend API Server",
 };
 
 export default function RootLayout({ children }) {

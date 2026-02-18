@@ -1,15 +1,15 @@
 // Mongoose model for recipes with ingredients, instructions, and engagement tracking
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define sub-schema for recipe ingredients
 const ingredientSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     quantity: { type: String, required: true, trim: true },
-    unit: { type: String, default: '', trim: true },
+    unit: { type: String, default: "", trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // Define main recipe schema
@@ -39,21 +39,21 @@ const recipeSchema = new mongoose.Schema(
     servings: { type: Number, required: true, min: 1 },
     difficulty: {
       type: String,
-      enum: ['Easy', 'Medium', 'Hard'],
+      enum: ["Easy", "Medium", "Hard"],
       required: true,
     },
     ingredients: {
       type: [ingredientSchema],
       validate: {
         validator: (v) => v.length > 0,
-        message: 'At least one ingredient is required',
+        message: "At least one ingredient is required",
       },
     },
     instructions: {
       type: [String],
       validate: {
         validator: (v) => v.length > 0,
-        message: 'At least one instruction step is required',
+        message: "At least one instruction step is required",
       },
     },
     images: [{ type: String }],
@@ -61,19 +61,19 @@ const recipeSchema = new mongoose.Schema(
     imageStoragePath: { type: String, default: null },
     imageThumbnailUrl: { type: String, default: null },
     imageAltText: { type: String, default: null },
-    authorId: { type: String, required: true, ref: 'User' },
+    authorId: { type: String, required: true, ref: "User" },
     status: {
       type: String,
-      enum: ['published', 'pending', 'rejected', 'draft'],
-      default: 'pending',
+      enum: ["published", "pending", "rejected", "draft"],
+      default: "pending",
     },
-    likedBy: [{ type: String, ref: 'User' }],
-    viewedBy: [{ type: String, ref: 'User' }],
+    likedBy: [{ type: String, ref: "User" }],
+    viewedBy: [{ type: String, ref: "User" }],
   },
   {
     timestamps: true,
     _id: false,
-  }
+  },
 );
 
 // Create indexes for efficient querying
@@ -81,20 +81,20 @@ recipeSchema.index({ authorId: 1 });
 recipeSchema.index({ status: 1 });
 recipeSchema.index({ category: 1 });
 recipeSchema.index({ createdAt: -1 });
-recipeSchema.index({ title: 'text', description: 'text' });
+recipeSchema.index({ title: "text", description: "text" });
 
 // Virtual field for like count
-recipeSchema.virtual('likeCount').get(function () {
+recipeSchema.virtual("likeCount").get(function () {
   return this.likedBy?.length || 0;
 });
 
 // Virtual field for view count
-recipeSchema.virtual('viewCount').get(function () {
+recipeSchema.virtual("viewCount").get(function () {
   return this.viewedBy?.length || 0;
 });
 
 // Configure JSON output to include virtuals and exclude internal fields
-recipeSchema.set('toJSON', {
+recipeSchema.set("toJSON", {
   virtuals: true,
   transform(_doc, ret) {
     delete ret.__v;
@@ -103,6 +103,6 @@ recipeSchema.set('toJSON', {
 });
 
 // Create or retrieve model to prevent duplicate registration
-const Recipe = mongoose.models.Recipe || mongoose.model('Recipe', recipeSchema);
+const Recipe = mongoose.models.Recipe || mongoose.model("Recipe", recipeSchema);
 
 export default Recipe;

@@ -1,9 +1,9 @@
 // API route for recipe favorite toggle - handles POST add/remove from user favorites
-import { connectDB } from '@/lib/db.js';
-import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
-import { requireActiveUser } from '@/lib/auth.js';
-import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
-import { User } from '@/models/index.js';
+import { connectDB } from "@/lib/db.js";
+import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
+import { requireActiveUser } from "@/lib/auth.js";
+import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
+import { User } from "@/models/index.js";
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -20,7 +20,7 @@ export async function POST(request, { params }) {
 
     const user = await User.findById(authUser.userId);
     if (!user) {
-      return errors.notFound('User not found', cors);
+      return errors.notFound("User not found", cors);
     }
 
     const idx = user.favorites.indexOf(id);

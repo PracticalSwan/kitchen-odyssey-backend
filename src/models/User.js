@@ -1,6 +1,6 @@
 // Mongoose model for users with authentication, profile, and engagement data
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define schema for user accounts
 const userSchema = new mongoose.Schema(
@@ -21,40 +21,40 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     passwordHash: { type: String, required: true },
     birthday: { type: String, default: null },
     role: {
       type: String,
-      enum: ['admin', 'user'],
-      default: 'user',
+      enum: ["admin", "user"],
+      default: "user",
     },
     status: {
       type: String,
-      enum: ['active', 'inactive', 'suspended', 'pending'],
-      default: 'inactive',
+      enum: ["active", "inactive", "suspended", "pending"],
+      default: "inactive",
     },
     joinedDate: { type: Date, default: Date.now },
     lastActive: { type: Date, default: null },
     avatarUrl: { type: String, default: null },
     avatarStoragePath: { type: String, default: null },
     avatarThumbnailUrl: { type: String, default: null },
-    bio: { type: String, default: '', maxlength: 500 },
-    location: { type: String, default: '', maxlength: 100 },
+    bio: { type: String, default: "", maxlength: 500 },
+    location: { type: String, default: "", maxlength: 100 },
     cookingLevel: {
       type: String,
-      enum: ['Beginner', 'Intermediate', 'Advanced', 'Professional'],
-      default: 'Beginner',
+      enum: ["Beginner", "Intermediate", "Advanced", "Professional"],
+      default: "Beginner",
     },
-    favorites: [{ type: String, ref: 'Recipe' }],
-    viewedRecipes: [{ type: String, ref: 'Recipe' }],
+    favorites: [{ type: String, ref: "Recipe" }],
+    viewedRecipes: [{ type: String, ref: "Recipe" }],
     tokenVersion: { type: Number, default: 0 },
   },
   {
     timestamps: true,
     _id: false,
-  }
+  },
 );
 
 // Create indexes for efficient queries
@@ -64,12 +64,12 @@ userSchema.index({ joinedDate: -1 });
 userSchema.index({ lastActive: -1 });
 
 // Virtual field for full name
-userSchema.virtual('fullName').get(function () {
+userSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
 // Strip sensitive fields from JSON output
-userSchema.set('toJSON', {
+userSchema.set("toJSON", {
   virtuals: true,
   transform(_doc, ret) {
     delete ret.passwordHash;
@@ -79,6 +79,6 @@ userSchema.set('toJSON', {
 });
 
 // Create or retrieve model to prevent duplicate registration
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;

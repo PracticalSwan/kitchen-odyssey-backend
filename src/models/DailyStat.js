@@ -1,16 +1,16 @@
 // Mongoose model for daily statistics tracking users and views
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define sub-schema for individual view entries
 const viewEntrySchema = new mongoose.Schema(
   {
     viewerKey: { type: String, required: true },
-    viewerType: { type: String, enum: ['user', 'guest'], default: 'user' },
+    viewerType: { type: String, enum: ["user", "guest"], default: "user" },
     recipeId: { type: String, required: true },
     viewedAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // Define main daily statistics schema
@@ -25,11 +25,11 @@ const dailyStatSchema = new mongoose.Schema(
   {
     timestamps: true,
     _id: false,
-  }
+  },
 );
 
 // Configure JSON output to exclude internal fields
-dailyStatSchema.set('toJSON', {
+dailyStatSchema.set("toJSON", {
   transform(_doc, ret) {
     delete ret.__v;
     return ret;
@@ -38,6 +38,6 @@ dailyStatSchema.set('toJSON', {
 
 // Create or retrieve model to prevent duplicate registration
 const DailyStat =
-  mongoose.models.DailyStat || mongoose.model('DailyStat', dailyStatSchema);
+  mongoose.models.DailyStat || mongoose.model("DailyStat", dailyStatSchema);
 
 export default DailyStat;

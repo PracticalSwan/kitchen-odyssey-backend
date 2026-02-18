@@ -1,19 +1,21 @@
 // Central configuration loader with environment variable validation
 
 // Required environment variables for application startup
-const requiredVars = ['MONGODB_URI', 'JWT_SECRET', 'ALLOWED_ORIGINS'];
+const requiredVars = ["MONGODB_URI", "JWT_SECRET", "ALLOWED_ORIGINS"];
 
 // Validate that all required environment variables are set
 export function validateRequiredEnv(options = {}) {
   const skipDuringBuild = options.skipDuringBuild !== false;
-  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
   if (skipDuringBuild && isBuildPhase) {
     return;
   }
 
   const missing = requiredVars.filter((key) => !process.env[key]);
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}`,
+    );
   }
 }
 
@@ -23,15 +25,19 @@ export const config = {
     uri: process.env.MONGODB_URI,
     maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 10,
     minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 2,
-    serverSelectionTimeoutMS: parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS) || 5000,
+    serverSelectionTimeoutMS:
+      parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS) || 5000,
   },
   jwt: {
     secret: process.env.JWT_SECRET,
-    accessTokenExpiry: '15m',
-    refreshTokenExpiry: '7d',
+    accessTokenExpiry: "15m",
+    refreshTokenExpiry: "7d",
   },
   cors: {
-    allowedOrigins: (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean),
+    allowedOrigins: (process.env.ALLOWED_ORIGINS || "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
@@ -40,11 +46,14 @@ export const config = {
     maxRead: parseInt(process.env.RATE_LIMIT_MAX_READ) || 100,
   },
   image: {
-    uploadDir: process.env.IMAGE_UPLOAD_DIR || './uploads',
-    publicUrlBase: process.env.IMAGE_PUBLIC_URL_BASE || 'http://localhost:3000/uploads',
+    uploadDir: process.env.IMAGE_UPLOAD_DIR || "./uploads",
+    publicUrlBase:
+      process.env.IMAGE_PUBLIC_URL_BASE || "http://localhost:3000/uploads",
     maxSizeBytes: parseInt(process.env.IMAGE_MAX_SIZE_BYTES) || 5242880,
-    allowedTypes: (process.env.IMAGE_ALLOWED_TYPES || 'image/jpeg,image/png,image/webp').split(','),
-    thumbnailDir: process.env.IMAGE_THUMBNAIL_DIR || 'thumbnails',
+    allowedTypes: (
+      process.env.IMAGE_ALLOWED_TYPES || "image/jpeg,image/png,image/webp"
+    ).split(","),
+    thumbnailDir: process.env.IMAGE_THUMBNAIL_DIR || "thumbnails",
   },
-  env: process.env.NODE_ENV || 'development',
+  env: process.env.NODE_ENV || "development",
 };

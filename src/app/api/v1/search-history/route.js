@@ -1,10 +1,10 @@
 // API route for search history - handles GET, POST, and DELETE user search queries
-import { connectDB } from '@/lib/db.js';
-import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
-import { requireAuth, getAuthUser } from '@/lib/auth.js';
-import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
-import { sanitizeString } from '@/lib/validate.js';
-import { SearchHistory } from '@/models/index.js';
+import { connectDB } from "@/lib/db.js";
+import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
+import { requireAuth, getAuthUser } from "@/lib/auth.js";
+import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
+import { sanitizeString } from "@/lib/validate.js";
+import { SearchHistory } from "@/models/index.js";
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -23,7 +23,7 @@ export async function GET(request) {
       .limit(10)
       .lean();
 
-    return successResponse(items, 'Search history', 200, cors);
+    return successResponse(items, "Search history", 200, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
   }
@@ -38,9 +38,9 @@ export async function POST(request) {
     const authUser = await requireAuth(request);
 
     const { query } = await request.json();
-    const trimmed = sanitizeString(query || '', 200);
+    const trimmed = sanitizeString(query || "", 200);
     if (!trimmed) {
-      return errors.validation('query is required', cors);
+      return errors.validation("query is required", cors);
     }
 
     // Remove older duplicate by same user with same query
@@ -53,16 +53,20 @@ export async function POST(request) {
     });
 
     // Enforce 10-item cap per user
-    const count = await SearchHistory.countDocuments({ userId: authUser.userId });
+    const count = await SearchHistory.countDocuments({
+      userId: authUser.userId,
+    });
     if (count > 10) {
       const oldest = await SearchHistory.find({ userId: authUser.userId })
         .sort({ createdAt: 1 })
         .limit(count - 10)
-        .select('_id');
-      await SearchHistory.deleteMany({ _id: { $in: oldest.map(o => o._id) } });
+        .select("_id");
+      await SearchHistory.deleteMany({
+        _id: { $in: oldest.map((o) => o._id) },
+      });
     }
 
-    return successResponse(entry, 'Search recorded', 201, cors);
+    return successResponse(entry, "Search recorded", 201, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
   }
@@ -77,7 +81,7 @@ export async function DELETE(request) {
     const authUser = await requireAuth(request);
 
     await SearchHistory.deleteMany({ userId: authUser.userId });
-    return successResponse(null, 'Search history cleared', 200, cors);
+    return successResponse(null, "Search history cleared", 200, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
   }

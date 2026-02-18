@@ -1,9 +1,9 @@
 // API route for review by ID - handles DELETE review by author or admin
-import { connectDB } from '@/lib/db.js';
-import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
-import { requireAuth } from '@/lib/auth.js';
-import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
-import { Review } from '@/models/index.js';
+import { connectDB } from "@/lib/db.js";
+import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
+import { requireAuth } from "@/lib/auth.js";
+import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
+import { Review } from "@/models/index.js";
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -20,15 +20,15 @@ export async function DELETE(request, { params }) {
 
     const review = await Review.findById(id);
     if (!review) {
-      return errors.notFound('Review not found', cors);
+      return errors.notFound("Review not found", cors);
     }
 
-    if (authUser.userId !== review.userId && authUser.role !== 'admin') {
-      return errors.forbidden('Access denied', cors);
+    if (authUser.userId !== review.userId && authUser.role !== "admin") {
+      return errors.forbidden("Access denied", cors);
     }
 
     await Review.findByIdAndDelete(id);
-    return successResponse(null, 'Review deleted', 200, cors);
+    return successResponse(null, "Review deleted", 200, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
   }

@@ -1,5 +1,5 @@
 // In-memory sliding window rate limiter for API endpoint protection
-import { config } from '@/lib/config.js';
+import { config } from "@/lib/config.js";
 
 // In-memory store for rate limit entries
 const store = new Map();
@@ -25,9 +25,9 @@ function startCleanup() {
 
 // Extract client IP from request headers
 function getClientIp(request) {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return request.headers.get('x-real-ip') || '127.0.0.1';
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return request.headers.get("x-real-ip") || "127.0.0.1";
 }
 
 // Rate limit thresholds by operation type
@@ -73,12 +73,15 @@ export function rateLimit(type) {
 // Generate rate limit exceeded response
 export function rateLimitResponse(corsHeaders = {}) {
   return Response.json(
-    { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests' } },
+    {
+      success: false,
+      error: { code: "RATE_LIMITED", message: "Too many requests" },
+    },
     {
       status: 429,
       headers: {
         ...corsHeaders,
-        'Retry-After': '60',
+        "Retry-After": "60",
       },
     },
   );

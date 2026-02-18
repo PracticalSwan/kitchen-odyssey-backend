@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Stub config before importing rateLimit
-vi.mock('@/lib/config.js', () => ({
+vi.mock("@/lib/config.js", () => ({
   config: {
     rateLimit: {
       windowMs: 1000,
@@ -12,23 +12,23 @@ vi.mock('@/lib/config.js', () => ({
   },
 }));
 
-const { rateLimit, rateLimitResponse } = await import('@/lib/rateLimit.js');
+const { rateLimit, rateLimitResponse } = await import("@/lib/rateLimit.js");
 
-function mockRequest(ip = '1.2.3.4') {
+function mockRequest(ip = "1.2.3.4") {
   return {
     headers: {
       get(name) {
-        if (name === 'x-forwarded-for') return ip;
+        if (name === "x-forwarded-for") return ip;
         return null;
       },
     },
   };
 }
 
-describe('rateLimit.js', () => {
-  it('allows requests under the limit', async () => {
-    const check = rateLimit('auth');
-    const req = mockRequest('10.0.0.1');
+describe("rateLimit.js", () => {
+  it("allows requests under the limit", async () => {
+    const check = rateLimit("auth");
+    const req = mockRequest("10.0.0.1");
     const r1 = await check(req);
     expect(r1.allowed).toBe(true);
     const r2 = await check(req);
@@ -37,9 +37,9 @@ describe('rateLimit.js', () => {
     expect(r3.allowed).toBe(true);
   });
 
-  it('blocks requests over the limit', async () => {
-    const check = rateLimit('auth');
-    const req = mockRequest('10.0.0.2');
+  it("blocks requests over the limit", async () => {
+    const check = rateLimit("auth");
+    const req = mockRequest("10.0.0.2");
     await check(req); // 1
     await check(req); // 2
     await check(req); // 3
@@ -48,9 +48,9 @@ describe('rateLimit.js', () => {
     expect(r4.retryAfter).toBeGreaterThan(0);
   });
 
-  it('uses different limits per type', async () => {
-    const checkWrite = rateLimit('write');
-    const req = mockRequest('10.0.0.3');
+  it("uses different limits per type", async () => {
+    const checkWrite = rateLimit("write");
+    const req = mockRequest("10.0.0.3");
     for (let i = 0; i < 5; i++) {
       const r = await checkWrite(req);
       expect(r.allowed).toBe(true);
@@ -59,10 +59,10 @@ describe('rateLimit.js', () => {
     expect(r6.allowed).toBe(false);
   });
 
-  it('isolates by IP', async () => {
-    const check = rateLimit('auth');
-    const req1 = mockRequest('10.0.0.4');
-    const req2 = mockRequest('10.0.0.5');
+  it("isolates by IP", async () => {
+    const check = rateLimit("auth");
+    const req1 = mockRequest("10.0.0.4");
+    const req2 = mockRequest("10.0.0.5");
     await check(req1);
     await check(req1);
     await check(req1);
@@ -73,9 +73,11 @@ describe('rateLimit.js', () => {
     expect(r2.allowed).toBe(true);
   });
 
-  describe('rateLimitResponse', () => {
-    it('returns 429 with JSON body', () => {
-      const response = rateLimitResponse({ 'Access-Control-Allow-Origin': '*' });
+  describe("rateLimitResponse", () => {
+    it("returns 429 with JSON body", () => {
+      const response = rateLimitResponse({
+        "Access-Control-Allow-Origin": "*",
+      });
       expect(response.status).toBe(429);
     });
   });

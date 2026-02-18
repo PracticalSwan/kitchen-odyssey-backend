@@ -1,9 +1,13 @@
 // Image upload processing with validation, resizing, and thumbnail generation
-import { mkdir, writeFile, chmod } from 'node:fs/promises';
-import { extname } from 'node:path';
-import sharp from 'sharp';
-import { config } from '@/lib/config.js';
-import { buildImagePaths, resolveUploadPath, toPublicImageUrl } from '@/lib/files.js';
+import { mkdir, writeFile, chmod } from "node:fs/promises";
+import { extname } from "node:path";
+import sharp from "sharp";
+import { config } from "@/lib/config.js";
+import {
+  buildImagePaths,
+  resolveUploadPath,
+  toPublicImageUrl,
+} from "@/lib/files.js";
 
 // Magic byte signatures for image type validation
 const MAGIC_BYTES = {
@@ -20,37 +24,41 @@ function startsWithBytes(buffer, signature) {
 
 // Validate WebP format by checking RIFF and WEBP markers
 function isWebp(buffer) {
-  if (!startsWithBytes(buffer, MAGIC_BYTES.webp) || buffer.length < 12) return false;
-  return buffer.toString('ascii', 8, 12) === 'WEBP';
+  if (!startsWithBytes(buffer, MAGIC_BYTES.webp) || buffer.length < 12)
+    return false;
+  return buffer.toString("ascii", 8, 12) === "WEBP";
 }
 
 // Detect MIME type from magic bytes
 function detectMimeFromMagic(buffer) {
-  if (startsWithBytes(buffer, MAGIC_BYTES.jpeg)) return 'image/jpeg';
-  if (startsWithBytes(buffer, MAGIC_BYTES.png)) return 'image/png';
-  if (isWebp(buffer)) return 'image/webp';
+  if (startsWithBytes(buffer, MAGIC_BYTES.jpeg)) return "image/jpeg";
+  if (startsWithBytes(buffer, MAGIC_BYTES.png)) return "image/png";
+  if (isWebp(buffer)) return "image/webp";
   return null;
 }
 
 // Sanitize file name stem to safe characters
 function sanitizeFileStem(input) {
-  const raw = `${input || ''}`.toLowerCase();
-  const stripped = raw.replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  return stripped || 'image';
+  const raw = `${input || ""}`.toLowerCase();
+  const stripped = raw
+    .replace(/[^a-z0-9-_]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return stripped || "image";
 }
 
 // Validate and normalize file extension
 function sanitizeExtension(fileName) {
-  const ext = extname(fileName || '').toLowerCase();
-  return ['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? ext : '.jpg';
+  const ext = extname(fileName || "").toLowerCase();
+  return [".jpg", ".jpeg", ".png", ".webp"].includes(ext) ? ext : ".jpg";
 }
 
 // Ensure upload directories exist with proper permissions
 async function ensureUploadDirs() {
-  const uploadRoot = resolveUploadPath('');
+  const uploadRoot = resolveUploadPath("");
   const thumbRoot = resolveUploadPath(config.image.thumbnailDir);
   if (!uploadRoot || !thumbRoot) {
-    throw new Error('Invalid upload directory configuration');
+    throw new Error("Invalid upload directory configuration");
   }
 
   await mkdir(uploadRoot, { recursive: true, mode: 0o755 });
@@ -60,22 +68,26 @@ async function ensureUploadDirs() {
 
 // Validate uploaded image file (size, type, dimensions)
 export async function parseAndValidateImage(file) {
-  if (!file || typeof file === 'string') {
-    const error = new Error('Image file is required');
+  if (!file || typeof file === "string") {
+    const error = new Error("Image file is required");
     error.status = 400;
     throw error;
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
   if (buffer.length > config.image.maxSizeBytes) {
-    const error = new Error(`Max size: ${config.image.maxSizeBytes / 1024 / 1024}MB`);
+    const error = new Error(
+      `Max size: ${config.image.maxSizeBytes / 1024 / 1024}MB`,
+    );
     error.status = 400;
     throw error;
   }
 
   const detectedMime = detectMimeFromMagic(buffer);
   if (!detectedMime || !config.image.allowedTypes.includes(detectedMime)) {
-    const error = new Error(`Allowed types: ${config.image.allowedTypes.join(', ')}`);
+    const error = new Error(
+      `Allowed types: ${config.image.allowedTypes.join(", ")}`,
+    );
     error.status = 400;
     throw error;
   }
@@ -85,7 +97,7 @@ export async function parseAndValidateImage(file) {
   const width = metadata.width || 0;
   const height = metadata.height || 0;
   if (!width || !height || width > 10000 || height > 10000) {
-    const error = new Error('Invalid image dimensions');
+    const error = new Error("Invalid image dimensions");
     error.status = 400;
     throw error;
   }
@@ -114,12 +126,12 @@ export async function uploadImage({
   const paths = buildImagePaths(baseName, extension);
 
   if (!paths.imageAbsolutePath || !paths.thumbnailAbsolutePath) {
-    throw new Error('Invalid upload path');
+    throw new Error("Invalid upload path");
   }
 
   await writeFile(paths.imageAbsolutePath, buffer, { mode: 0o644 });
   await sharp(buffer)
-    .resize(thumbnailSize, thumbnailSize, { fit: 'cover' })
+    .resize(thumbnailSize, thumbnailSize, { fit: "cover" })
     .toFile(paths.thumbnailAbsolutePath);
   await chmod(paths.thumbnailAbsolutePath, 0o644);
 

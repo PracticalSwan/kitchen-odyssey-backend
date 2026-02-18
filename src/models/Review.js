@@ -1,13 +1,13 @@
 // Mongoose model for recipe reviews with ratings and user-per-recipe uniqueness
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define schema for recipe reviews
 const reviewSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
-    recipeId: { type: String, required: true, ref: 'Recipe' },
-    userId: { type: String, required: true, ref: 'User' },
+    recipeId: { type: String, required: true, ref: "Recipe" },
+    userId: { type: String, required: true, ref: "User" },
     rating: {
       type: Number,
       required: true,
@@ -16,7 +16,7 @@ const reviewSchema = new mongoose.Schema(
     },
     comment: {
       type: String,
-      default: '',
+      default: "",
       trim: true,
       maxlength: 2000,
     },
@@ -24,7 +24,7 @@ const reviewSchema = new mongoose.Schema(
   {
     timestamps: true,
     _id: false,
-  }
+  },
 );
 
 // Create indexes for efficient queries and uniqueness constraint
@@ -34,7 +34,7 @@ reviewSchema.index({ recipeId: 1 });
 reviewSchema.index({ userId: 1 });
 
 // Configure JSON output to exclude internal fields
-reviewSchema.set('toJSON', {
+reviewSchema.set("toJSON", {
   transform(_doc, ret) {
     delete ret.__v;
     return ret;
@@ -42,6 +42,6 @@ reviewSchema.set('toJSON', {
 });
 
 // Create or retrieve model to prevent duplicate registration
-const Review = mongoose.models.Review || mongoose.model('Review', reviewSchema);
+const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
 
 export default Review;

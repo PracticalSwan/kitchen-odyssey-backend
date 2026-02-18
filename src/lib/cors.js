@@ -1,26 +1,27 @@
 // CORS helper for API routes with origin validation and preflight handling
-import { config } from './config.js';
+import { config } from "./config.js";
 
 // Generate CORS headers based on request origin
 export function getCorsHeaders(request) {
-  const origin = request.headers.get('origin');
+  const origin = request.headers.get("origin");
   const allowedOrigins = config.cors.allowedOrigins;
 
   // Check if origin is allowed or wildcard
-  const isAllowed = Boolean(origin) && (
-    allowedOrigins.includes('*') || allowedOrigins.includes(origin)
-  );
+  const isAllowed =
+    Boolean(origin) &&
+    (allowedOrigins.includes("*") || allowedOrigins.includes(origin));
 
   const headers = {
-    'Access-Control-Allow-Credentials': isAllowed ? 'true' : 'false',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Guest-ID, X-CSRF-Token',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
+    "Access-Control-Allow-Credentials": isAllowed ? "true" : "false",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type, Authorization, X-Guest-ID, X-CSRF-Token",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
   };
 
   if (isAllowed) {
-    headers['Access-Control-Allow-Origin'] = origin;
+    headers["Access-Control-Allow-Origin"] = origin;
   }
 
   return headers;

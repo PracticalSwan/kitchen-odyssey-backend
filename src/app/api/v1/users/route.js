@@ -1,13 +1,13 @@
 // API route for users - handles GET list with search/filter/pagination
-import { connectDB } from '@/lib/db.js';
-import { successResponse, safeErrorResponse } from '@/lib/response.js';
-import { getAuthUser } from '@/lib/auth.js';
-import { getCorsHeaders, handleOptions } from '@/lib/cors.js';
-import { sanitizeString } from '@/lib/validate.js';
-import { User } from '@/models/index.js';
+import { connectDB } from "@/lib/db.js";
+import { successResponse, safeErrorResponse } from "@/lib/response.js";
+import { getAuthUser } from "@/lib/auth.js";
+import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
+import { sanitizeString } from "@/lib/validate.js";
+import { User } from "@/models/index.js";
 
 function escapeRegex(input) {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export async function OPTIONS(request) {
@@ -21,14 +21,17 @@ export async function GET(request) {
   try {
     await connectDB();
     const authUser = await getAuthUser(request);
-    const isAdmin = authUser?.role === 'admin';
+    const isAdmin = authUser?.role === "admin";
 
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
-    const status = searchParams.get('status');
-    const role = searchParams.get('role');
-    const search = sanitizeString(searchParams.get('search') || '', 120);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "20", 10)),
+    );
+    const status = searchParams.get("status");
+    const role = searchParams.get("role");
+    const search = sanitizeString(searchParams.get("search") || "", 120);
 
     const filter = {};
     if (status) filter.status = status;
@@ -36,15 +39,15 @@ export async function GET(request) {
     if (search) {
       const safeSearch = escapeRegex(search);
       filter.$or = [
-        { username: { $regex: safeSearch, $options: 'i' } },
-        { email: { $regex: safeSearch, $options: 'i' } },
-        { firstName: { $regex: safeSearch, $options: 'i' } },
-        { lastName: { $regex: safeSearch, $options: 'i' } },
+        { username: { $regex: safeSearch, $options: "i" } },
+        { email: { $regex: safeSearch, $options: "i" } },
+        { firstName: { $regex: safeSearch, $options: "i" } },
+        { lastName: { $regex: safeSearch, $options: "i" } },
       ];
     }
 
     if (!isAdmin) {
-      filter.status = { $ne: 'suspended' };
+      filter.status = { $ne: "suspended" };
     }
 
     const query = User.find(filter)
@@ -53,17 +56,30 @@ export async function GET(request) {
       .limit(limit);
 
     if (!isAdmin) {
-      query.select('_id username firstName lastName role status joinedDate avatarUrl avatarThumbnailUrl cookingLevel bio location favorites');
+      query.select(
+        "_id username firstName lastName role status joinedDate avatarUrl avatarThumbnailUrl cookingLevel bio location favorites",
+      );
     }
 
-    const [users, total] = await Promise.all([query.lean(), User.countDocuments(filter)]);
+    const [users, total] = await Promise.all([
+      query.lean(),
+      User.countDocuments(filter),
+    ]);
 
     const safeUsers = isAdmin
       ? users.map(({ passwordHash, __v, ...rest }) => rest)
       : users.map(({ __v, ...rest }) => rest);
 
     return successResponse(
-      { users: safeUsers, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } },
+      {
+        users: safeUsers,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
       null,
       200,
       cors,

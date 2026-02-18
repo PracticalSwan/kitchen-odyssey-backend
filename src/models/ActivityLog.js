@@ -1,13 +1,13 @@
 // Mongoose model for activity log entries with TTL auto-deletion
 
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define schema for activity log entries
 const activityLogSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
     type: { type: String, required: true, trim: true },
-    message: { type: String, default: '', trim: true },
+    message: { type: String, default: "", trim: true },
     userId: { type: String, default: null },
     targetId: { type: String, default: null },
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
@@ -16,7 +16,7 @@ const activityLogSchema = new mongoose.Schema(
   {
     timestamps: true,
     _id: false,
-  }
+  },
 );
 
 // Create indexes for efficient queries and automatic cleanup
@@ -26,7 +26,7 @@ activityLogSchema.index({ userId: 1 });
 activityLogSchema.index({ type: 1 });
 
 // Configure JSON output to exclude internal fields
-activityLogSchema.set('toJSON', {
+activityLogSchema.set("toJSON", {
   transform(_doc, ret) {
     delete ret.__v;
     return ret;
@@ -36,6 +36,6 @@ activityLogSchema.set('toJSON', {
 // Create or retrieve model to prevent duplicate registration
 const ActivityLog =
   mongoose.models.ActivityLog ||
-  mongoose.model('ActivityLog', activityLogSchema);
+  mongoose.model("ActivityLog", activityLogSchema);
 
 export default ActivityLog;

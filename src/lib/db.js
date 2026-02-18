@@ -1,5 +1,5 @@
 // MongoDB connection utility with caching, pooling, and health monitoring
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Global connection cache to prevent multiple connections in serverless environments
 let cached = global.__mongooseConnection;
@@ -24,15 +24,17 @@ export async function connectDB() {
   // Create new connection if not exists
   if (!cached.promise) {
     const uri = process.env.MONGODB_URI;
-    if (!uri) throw new Error('MONGODB_URI environment variable is not set');
+    if (!uri) throw new Error("MONGODB_URI environment variable is not set");
 
     // Configure connection pool and timeouts
     const opts = {
       maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 5,
       minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 1,
-      serverSelectionTimeoutMS: parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS) || 10000,
+      serverSelectionTimeoutMS:
+        parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS) || 10000,
       socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT_MS) || 45000,
-      connectTimeoutMS: parseInt(process.env.MONGODB_CONNECT_TIMEOUT_MS) || 10000,
+      connectTimeoutMS:
+        parseInt(process.env.MONGODB_CONNECT_TIMEOUT_MS) || 10000,
       // Enable serverless deployment optimizations
       maxIdleTimeMS: 30000,
     };
@@ -43,16 +45,16 @@ export async function connectDB() {
     cached.promise
       .then(() => {
         console.log(`✓ MongoDB connected (pool: ${opts.maxPoolSize})`);
-        mongoose.connection.on('error', (err) => {
-          console.error('MongoDB connection error:', err);
+        mongoose.connection.on("error", (err) => {
+          console.error("MongoDB connection error:", err);
         });
-        mongoose.connection.on('disconnected', () => {
-          console.warn('MongoDB disconnected');
+        mongoose.connection.on("disconnected", () => {
+          console.warn("MongoDB disconnected");
           cached.conn = null;
         });
       })
       .catch((err) => {
-        console.error('MongoDB connection failed:', err);
+        console.error("MongoDB connection failed:", err);
         cached.promise = null;
         throw err;
       });
@@ -72,14 +74,19 @@ export async function connectDB() {
 // Get human-readable connection status
 export function getConnectionStatus() {
   const state = mongoose.connection.readyState;
-  const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
-  return states[state] || 'unknown';
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+  return states[state] || "unknown";
 }
 
 // Get detailed connection statistics for monitoring
 export function getConnectionStats() {
   if (!mongoose.connection) {
-    return { status: 'not initialized', pool: null };
+    return { status: "not initialized", pool: null };
   }
 
   return {
@@ -94,14 +101,14 @@ export function getConnectionStats() {
 export async function closeDB() {
   if (mongoose.connection.readyState === 1) {
     await mongoose.disconnect();
-    console.log('MongoDB connection closed');
+    console.log("MongoDB connection closed");
     cached.conn = null;
     cached.promise = null;
   }
 }
 
 // Register shutdown handlers for clean disconnect
-if (typeof process !== 'undefined') {
-  process.on('SIGTERM', () => closeDB().catch(console.error));
-  process.on('SIGINT', () => closeDB().catch(console.error));
+if (typeof process !== "undefined") {
+  process.on("SIGTERM", () => closeDB().catch(console.error));
+  process.on("SIGINT", () => closeDB().catch(console.error));
 }
