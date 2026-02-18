@@ -1,11 +1,13 @@
-// Standardized API response and error envelope utilities
+// Standardized API response formatting and error handling utilities
 
+// Create success response with optional message
 export function successResponse(data, message = null, status = 200, headers = {}) {
   const body = { success: true, data };
   if (message) body.message = message;
   return Response.json(body, { status, headers });
 }
 
+// Create error response with code, message, and optional details
 export function errorResponse(code, message, status = 400, details = null, headers = {}) {
   const body = {
     success: false,
@@ -15,7 +17,7 @@ export function errorResponse(code, message, status = 400, details = null, heade
   return Response.json(body, { status, headers });
 }
 
-// Common error helpers — all accept optional headers as last arg
+// Detect if object is CORS headers by checking for known header keys
 function isLikelyHeaders(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const keys = Object.keys(value);
@@ -25,6 +27,7 @@ function isLikelyHeaders(value) {
   });
 }
 
+// Common error helpers - all accept optional headers as last argument
 export const errors = {
   validation: (message, detailsOrHeaders = null, maybeHeaders = {}) => {
     if (isLikelyHeaders(detailsOrHeaders) && (!maybeHeaders || Object.keys(maybeHeaders).length === 0)) {
@@ -40,7 +43,7 @@ export const errors = {
   internal: (message = 'Internal server error', headers) => errorResponse('INTERNAL_ERROR', message, 500, null, headers),
 };
 
-// Secure error handler — hides stack traces and internal details
+// Secure error handler - hides stack traces and internal details in production
 export function safeErrorResponse(error, headers = {}) {
   if (process.env.NODE_ENV === 'development') {
     console.error('[API Error]', error);

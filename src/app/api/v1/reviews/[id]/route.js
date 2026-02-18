@@ -1,3 +1,4 @@
+// API route for review by ID - handles DELETE review by author or admin
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireAuth } from '@/lib/auth.js';

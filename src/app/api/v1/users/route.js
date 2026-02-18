@@ -1,3 +1,4 @@
+// API route for users - handles GET list with search/filter/pagination
 import { connectDB } from '@/lib/db.js';
 import { successResponse, safeErrorResponse } from '@/lib/response.js';
 import { getAuthUser } from '@/lib/auth.js';

@@ -1,3 +1,4 @@
+// API route for recipe reviews - handles GET list and POST upsert review
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireActiveUser } from '@/lib/auth.js';

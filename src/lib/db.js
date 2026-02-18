@@ -1,13 +1,17 @@
-// Cached MongoDB connection utility with pooling and monitoring
+// MongoDB connection utility with caching, pooling, and health monitoring
 import mongoose from 'mongoose';
 
+// Global connection cache to prevent multiple connections in serverless environments
 let cached = global.__mongooseConnection;
 
+// Initialize cache object if not exists
 if (!cached) {
   cached = global.__mongooseConnection = { conn: null, promise: null };
 }
 
+// Establish and cache MongoDB connection with connection pooling
 export async function connectDB() {
+  // Return cached connection if alive
   if (cached.conn) {
     // Ensure connection is still alive
     if (mongoose.connection.readyState === 1) {
@@ -17,10 +21,12 @@ export async function connectDB() {
     cached.conn = null;
   }
 
+  // Create new connection if not exists
   if (!cached.promise) {
     const uri = process.env.MONGODB_URI;
     if (!uri) throw new Error('MONGODB_URI environment variable is not set');
 
+    // Configure connection pool and timeouts
     const opts = {
       maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 5,
       minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 1,
@@ -33,6 +39,7 @@ export async function connectDB() {
 
     cached.promise = mongoose.connect(uri, opts);
 
+    // Set up connection event handlers
     cached.promise
       .then(() => {
         console.log(`✓ MongoDB connected (pool: ${opts.maxPoolSize})`);
@@ -51,6 +58,7 @@ export async function connectDB() {
       });
   }
 
+  // Await connection and handle errors
   try {
     cached.conn = await cached.promise;
     return cached.conn;
@@ -61,12 +69,14 @@ export async function connectDB() {
   }
 }
 
+// Get human-readable connection status
 export function getConnectionStatus() {
   const state = mongoose.connection.readyState;
   const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
   return states[state] || 'unknown';
 }
 
+// Get detailed connection statistics for monitoring
 export function getConnectionStats() {
   if (!mongoose.connection) {
     return { status: 'not initialized', pool: null };
@@ -90,7 +100,7 @@ export async function closeDB() {
   }
 }
 
-// Handle process termination
+// Register shutdown handlers for clean disconnect
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => closeDB().catch(console.error));
   process.on('SIGINT', () => closeDB().catch(console.error));

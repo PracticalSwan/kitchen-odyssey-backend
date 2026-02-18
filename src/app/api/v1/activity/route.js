@@ -1,3 +1,4 @@
+// API route for activity log - handles GET admin feed and POST activity recording
 import { connectDB } from '@/lib/db.js';
 import { successResponse, safeErrorResponse } from '@/lib/response.js';
 import { requireRole, requireAuth } from '@/lib/auth.js';

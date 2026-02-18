@@ -1,25 +1,30 @@
+// Image upload processing with validation, resizing, and thumbnail generation
 import { mkdir, writeFile, chmod } from 'node:fs/promises';
 import { extname } from 'node:path';
 import sharp from 'sharp';
 import { config } from '@/lib/config.js';
 import { buildImagePaths, resolveUploadPath, toPublicImageUrl } from '@/lib/files.js';
 
+// Magic byte signatures for image type validation
 const MAGIC_BYTES = {
   jpeg: [0xff, 0xd8, 0xff],
   png: [0x89, 0x50, 0x4e, 0x47],
   webp: [0x52, 0x49, 0x46, 0x46], // RIFF header, validated further below
 };
 
+// Check if buffer starts with specified byte signature
 function startsWithBytes(buffer, signature) {
   if (!buffer || buffer.length < signature.length) return false;
   return signature.every((byte, index) => buffer[index] === byte);
 }
 
+// Validate WebP format by checking RIFF and WEBP markers
 function isWebp(buffer) {
   if (!startsWithBytes(buffer, MAGIC_BYTES.webp) || buffer.length < 12) return false;
   return buffer.toString('ascii', 8, 12) === 'WEBP';
 }
 
+// Detect MIME type from magic bytes
 function detectMimeFromMagic(buffer) {
   if (startsWithBytes(buffer, MAGIC_BYTES.jpeg)) return 'image/jpeg';
   if (startsWithBytes(buffer, MAGIC_BYTES.png)) return 'image/png';
@@ -27,17 +32,20 @@ function detectMimeFromMagic(buffer) {
   return null;
 }
 
+// Sanitize file name stem to safe characters
 function sanitizeFileStem(input) {
   const raw = `${input || ''}`.toLowerCase();
   const stripped = raw.replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   return stripped || 'image';
 }
 
+// Validate and normalize file extension
 function sanitizeExtension(fileName) {
   const ext = extname(fileName || '').toLowerCase();
   return ['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? ext : '.jpg';
 }
 
+// Ensure upload directories exist with proper permissions
 async function ensureUploadDirs() {
   const uploadRoot = resolveUploadPath('');
   const thumbRoot = resolveUploadPath(config.image.thumbnailDir);
@@ -50,6 +58,7 @@ async function ensureUploadDirs() {
   return { uploadRoot, thumbRoot };
 }
 
+// Validate uploaded image file (size, type, dimensions)
 export async function parseAndValidateImage(file) {
   if (!file || typeof file === 'string') {
     const error = new Error('Image file is required');
@@ -71,7 +80,7 @@ export async function parseAndValidateImage(file) {
     throw error;
   }
 
-  // Validate image dimensions to avoid decompression bomb style payloads.
+  // Validate image dimensions to avoid decompression bomb style payloads
   const metadata = await sharp(buffer).metadata();
   const width = metadata.width || 0;
   const height = metadata.height || 0;
@@ -88,6 +97,7 @@ export async function parseAndValidateImage(file) {
   };
 }
 
+// Upload and process image with thumbnail generation
 export async function uploadImage({
   file,
   entityPrefix,

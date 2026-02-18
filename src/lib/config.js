@@ -1,6 +1,9 @@
-// Environment configuration with validation
+// Central configuration loader with environment variable validation
+
+// Required environment variables for application startup
 const requiredVars = ['MONGODB_URI', 'JWT_SECRET', 'ALLOWED_ORIGINS'];
 
+// Validate that all required environment variables are set
 export function validateRequiredEnv(options = {}) {
   const skipDuringBuild = options.skipDuringBuild !== false;
   const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
@@ -14,6 +17,7 @@ export function validateRequiredEnv(options = {}) {
   }
 }
 
+// Centralized application configuration from environment variables
 export const config = {
   mongodb: {
     uri: process.env.MONGODB_URI,

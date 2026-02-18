@@ -1,12 +1,15 @@
-// Input validation and sanitization utilities
+// Input validation schemas and HTML sanitization utilities
 
+// Regular expression to detect HTML tags for XSS prevention
 const HTML_TAG_RE = /<[^>]*>/g;
 
+// Remove HTML tags and trim string to prevent XSS attacks
 export function sanitizeString(str, maxLength = 5000) {
   if (typeof str !== 'string') return '';
   return str.replace(HTML_TAG_RE, '').trim().slice(0, maxLength);
 }
 
+// Recursively sanitize query objects by removing MongoDB operators
 export function sanitizeQuery(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
 
@@ -22,14 +25,17 @@ export function sanitizeQuery(obj) {
   return clean;
 }
 
+// Return successful validation result
 function ok(value) {
   return { valid: true, value };
 }
 
+// Return failed validation result
 function fail(error) {
   return { valid: false, error };
 }
 
+// Validate and sanitize required string fields
 function validateRequiredSanitizedString(val, requiredMessage, emptyMessage, maxLength) {
   if (typeof val !== 'string') return fail(requiredMessage);
   const v = sanitizeString(val, maxLength);
@@ -37,9 +43,11 @@ function validateRequiredSanitizedString(val, requiredMessage, emptyMessage, max
   return ok(v);
 }
 
+// Regular expressions for email and username validation
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-zA-Z0-9_]{2,30}$/;
 
+// Validation schemas for common input types
 export const schemas = {
   email(val) {
     if (typeof val !== 'string') return fail('Email is required');

@@ -1,6 +1,9 @@
+// API proxy middleware for security headers, CSRF protection, and request validation
+
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 
+// Build security headers for all responses
 function buildSecurityHeaders() {
   return {
     'X-Frame-Options': 'DENY',
@@ -12,6 +15,7 @@ function buildSecurityHeaders() {
   };
 }
 
+// Parse cookie header into a Map for easy lookup
 function parseCookieMap(cookieHeader) {
   const map = new Map();
   if (!cookieHeader) return map;
@@ -23,6 +27,7 @@ function parseCookieMap(cookieHeader) {
   return map;
 }
 
+// Apply security headers and correlation ID to response
 function applyCommonHeaders(response, correlationId) {
   const securityHeaders = buildSecurityHeaders();
   for (const [key, value] of Object.entries(securityHeaders)) {
@@ -32,10 +37,12 @@ function applyCommonHeaders(response, correlationId) {
   return response;
 }
 
+// Check if HTTP method modifies server state
 function isStateChangingMethod(method) {
   return ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method);
 }
 
+// Define paths exempt from CSRF validation (public endpoints)
 function isCsrfExemptPath(pathname) {
   if (pathname === '/api/v1/auth/login') return true;
   if (pathname === '/api/v1/auth/signup') return true;
@@ -45,7 +52,9 @@ function isCsrfExemptPath(pathname) {
   return false;
 }
 
+// Main proxy middleware function
 export function proxy(request) {
+  // Generate or retrieve correlation ID for request tracking
   const requestHeaders = new Headers(request.headers);
   const correlationId = requestHeaders.get('x-correlation-id') || randomUUID();
   requestHeaders.set('x-correlation-id', correlationId);
@@ -53,7 +62,9 @@ export function proxy(request) {
   const pathname = request.nextUrl.pathname;
   const method = request.method.toUpperCase();
 
+  // Validate state-changing requests
   if (isStateChangingMethod(method)) {
+    // Enforce maximum request body size
     const maxBodyBytes = parseInt(process.env.MAX_REQUEST_BODY_BYTES || '1048576', 10);
     const contentLength = parseInt(requestHeaders.get('content-length') || '0', 10);
     if (contentLength > maxBodyBytes) {
@@ -70,6 +81,7 @@ export function proxy(request) {
       return applyCommonHeaders(tooLarge, correlationId);
     }
 
+    // Validate CSRF token for non-exempt paths
     if (!isCsrfExemptPath(pathname)) {
       const cookies = parseCookieMap(requestHeaders.get('cookie'));
       const csrfCookie = cookies.get('ko_csrf');
@@ -90,6 +102,7 @@ export function proxy(request) {
     }
   }
 
+  // Forward request to API route with headers
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
@@ -97,6 +110,7 @@ export function proxy(request) {
   return applyCommonHeaders(response, correlationId);
 }
 
+// Configure middleware to match API routes
 export const config = {
   matcher: ['/api/:path*'],
 };

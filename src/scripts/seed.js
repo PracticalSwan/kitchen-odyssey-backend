@@ -1,3 +1,4 @@
+// Database seeding script - populates MongoDB with initial users, recipes, and images
 /**
  * Seed script: populates MongoDB with initial data from localStorage seed data.
  *

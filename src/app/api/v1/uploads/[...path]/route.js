@@ -1,3 +1,4 @@
+// API route for serving uploaded static files - handles GET image serving with caching
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { resolveUploadPath } from '@/lib/files.js';

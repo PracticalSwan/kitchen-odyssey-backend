@@ -1,3 +1,4 @@
+// API route for system monitoring - handles GET admin system and database metrics
 import { connectDB, getConnectionStats } from '@/lib/db.js';
 import { getAuthUser, requireAuth } from '@/lib/auth.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';

@@ -1,3 +1,4 @@
+// API route for search history - handles GET, POST, and DELETE user search queries
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireAuth, getAuthUser } from '@/lib/auth.js';

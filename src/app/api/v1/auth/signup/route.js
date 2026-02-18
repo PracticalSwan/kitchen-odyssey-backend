@@ -1,3 +1,4 @@
+// User registration endpoint - creates new account with validation and pending status
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errorResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { generateAccessToken, generateRefreshToken, setAuthCookies } from '@/lib/auth.js';
@@ -7,22 +8,26 @@ import { schemas, sanitizeString } from '@/lib/validate.js';
 import { User } from '@/models/index.js';
 import bcrypt from 'bcryptjs';
 
+// Handle CORS preflight requests
 export async function OPTIONS(request) {
   return handleOptions(request);
 }
 
+// Handle POST signup requests
 export async function POST(request) {
   const cors = getCorsHeaders(request);
 
+  // Apply rate limiting
   const limit = await rateLimit('auth')(request);
   if (!limit.allowed) return rateLimitResponse(cors);
 
   try {
+    // Connect to database
     await connectDB();
     const body = await request.json();
     const { username, firstName, lastName, email, password, birthday, bio, location, cookingLevel } = body;
 
-    // Validation using schemas
+    // Validate input fields
     const validationErrors = [];
     const usernameCheck = schemas.username(username);
     const emailCheck = schemas.email(email);
@@ -37,12 +42,13 @@ export async function POST(request) {
       return errorResponse('VALIDATION_ERROR', 'Validation failed', 400, validationErrors, cors);
     }
 
-    // Check duplicate email
+    // Check for duplicate email
     const existing = await User.findOne({ email: emailCheck.value });
     if (existing) {
       return errors.conflict('Email already registered', cors);
     }
 
+    // Hash password and create user
     const passwordHash = await bcrypt.hash(password, 10);
     const userId = `user-${Date.now().toString(36)}`;
 
@@ -65,9 +71,11 @@ export async function POST(request) {
       tokenVersion: 0,
     });
 
+    // Generate authentication tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // Set cookies and return response
     const response = successResponse(
       { user: user.toJSON() },
       'Account created successfully',

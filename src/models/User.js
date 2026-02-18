@@ -1,5 +1,8 @@
+// Mongoose model for users with authentication, profile, and engagement data
+
 import mongoose from 'mongoose';
 
+// Define schema for user accounts
 const userSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
@@ -54,13 +57,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Create indexes for efficient queries
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ joinedDate: -1 });
 userSchema.index({ lastActive: -1 });
 
-// Virtual for full name
+// Virtual field for full name
 userSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
@@ -75,6 +78,7 @@ userSchema.set('toJSON', {
   },
 });
 
+// Create or retrieve model to prevent duplicate registration
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default User;

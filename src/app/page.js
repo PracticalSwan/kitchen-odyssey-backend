@@ -1,3 +1,4 @@
+// Next.js root page component - displays API information
 export default function ApiRoot() {
   return (
     <div>

@@ -1,5 +1,8 @@
+// Mongoose model for recipes with ingredients, instructions, and engagement tracking
+
 import mongoose from 'mongoose';
 
+// Define sub-schema for recipe ingredients
 const ingredientSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -9,6 +12,7 @@ const ingredientSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Define main recipe schema
 const recipeSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
@@ -72,23 +76,24 @@ const recipeSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Create indexes for efficient querying
 recipeSchema.index({ authorId: 1 });
 recipeSchema.index({ status: 1 });
 recipeSchema.index({ category: 1 });
 recipeSchema.index({ createdAt: -1 });
 recipeSchema.index({ title: 'text', description: 'text' });
 
-// Virtual for like count
+// Virtual field for like count
 recipeSchema.virtual('likeCount').get(function () {
   return this.likedBy?.length || 0;
 });
 
-// Virtual for view count
+// Virtual field for view count
 recipeSchema.virtual('viewCount').get(function () {
   return this.viewedBy?.length || 0;
 });
 
+// Configure JSON output to include virtuals and exclude internal fields
 recipeSchema.set('toJSON', {
   virtuals: true,
   transform(_doc, ret) {
@@ -97,6 +102,7 @@ recipeSchema.set('toJSON', {
   },
 });
 
+// Create or retrieve model to prevent duplicate registration
 const Recipe = mongoose.models.Recipe || mongoose.model('Recipe', recipeSchema);
 
 export default Recipe;

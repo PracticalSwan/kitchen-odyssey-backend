@@ -1,3 +1,4 @@
+// API route for user avatar upload - handles POST avatar image and thumbnail storage
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireActiveUser } from '@/lib/auth.js';

@@ -1,10 +1,12 @@
-// CORS helper for API route handlers
+// CORS helper for API routes with origin validation and preflight handling
 import { config } from './config.js';
 
+// Generate CORS headers based on request origin
 export function getCorsHeaders(request) {
   const origin = request.headers.get('origin');
   const allowedOrigins = config.cors.allowedOrigins;
 
+  // Check if origin is allowed or wildcard
   const isAllowed = Boolean(origin) && (
     allowedOrigins.includes('*') || allowedOrigins.includes(origin)
   );

@@ -1,3 +1,4 @@
+// API route for recipe rating - handles GET average rating and count
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';

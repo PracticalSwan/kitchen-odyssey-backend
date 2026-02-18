@@ -1,3 +1,4 @@
+// API route for recipe view tracking - handles POST view recording for analytics
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { getAuthUser } from '@/lib/auth.js';

@@ -1,3 +1,4 @@
+// API route for random recipe suggestion - handles GET quality-based random recipe
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { getCorsHeaders, handleOptions } from '@/lib/cors.js';

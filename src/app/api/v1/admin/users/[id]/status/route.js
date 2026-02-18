@@ -1,3 +1,4 @@
+// API route for admin user status - handles PATCH status update for moderation
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { requireRole } from '@/lib/auth.js';

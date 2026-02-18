@@ -1,5 +1,8 @@
+// Mongoose model for daily statistics tracking users and views
+
 import mongoose from 'mongoose';
 
+// Define sub-schema for individual view entries
 const viewEntrySchema = new mongoose.Schema(
   {
     viewerKey: { type: String, required: true },
@@ -10,6 +13,7 @@ const viewEntrySchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Define main daily statistics schema
 const dailyStatSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true }, // YYYY-MM-DD date key
@@ -24,6 +28,7 @@ const dailyStatSchema = new mongoose.Schema(
   }
 );
 
+// Configure JSON output to exclude internal fields
 dailyStatSchema.set('toJSON', {
   transform(_doc, ret) {
     delete ret.__v;
@@ -31,6 +36,7 @@ dailyStatSchema.set('toJSON', {
   },
 });
 
+// Create or retrieve model to prevent duplicate registration
 const DailyStat =
   mongoose.models.DailyStat || mongoose.model('DailyStat', dailyStatSchema);
 

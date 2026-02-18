@@ -1,3 +1,4 @@
+// API route for recipes - handles GET list/filter/sort and POST create
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { getAuthUser, requireAuth } from '@/lib/auth.js';

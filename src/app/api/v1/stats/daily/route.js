@@ -1,3 +1,4 @@
+// API route for daily stats - handles GET admin dashboard analytics
 import { connectDB } from '@/lib/db.js';
 import { successResponse, safeErrorResponse } from '@/lib/response.js';
 import { requireRole } from '@/lib/auth.js';

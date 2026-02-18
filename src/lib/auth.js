@@ -1,9 +1,10 @@
-// JWT token management and auth middleware utilities
+// JWT token management and authentication middleware utilities
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { connectDB } from './db.js';
 
+// JWT secret validation with minimum length requirement
 const JWT_SECRET = () => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 32) {
@@ -11,10 +12,13 @@ const JWT_SECRET = () => {
   }
   return secret;
 };
+
+// Cookie names for authentication tokens
 const COOKIE_ACCESS = 'ko_access';
 const COOKIE_REFRESH = 'ko_refresh';
 const COOKIE_CSRF = 'ko_csrf';
 
+// Generate short-lived JWT access token (15 minutes)
 export function generateAccessToken(user) {
   return jwt.sign(
     { userId: user._id || user.id, role: user.role, type: 'access', tokenVersion: user.tokenVersion || 0 },
@@ -23,6 +27,7 @@ export function generateAccessToken(user) {
   );
 }
 
+// Generate long-lived JWT refresh token (7 days)
 export function generateRefreshToken(user) {
   return jwt.sign(
     { userId: user._id || user.id, type: 'refresh', tokenVersion: user.tokenVersion || 0 },
@@ -31,6 +36,7 @@ export function generateRefreshToken(user) {
   );
 }
 
+// Verify and decode JWT token, returns null if invalid
 export function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET());
@@ -39,6 +45,7 @@ export function verifyToken(token) {
   }
 }
 
+// Create standardized authentication error
 function authError(message, code = 'UNAUTHORIZED', status = 401) {
   const err = new Error(message);
   err.code = code;
@@ -46,7 +53,7 @@ function authError(message, code = 'UNAUTHORIZED', status = 401) {
   return err;
 }
 
-// Extract and verify user from request cookies — returns user payload or null
+// Extract and verify user from request cookies, returns user payload or null
 export async function getAuthUser(request) {
   try {
     const cookieStore = await cookies();
@@ -72,21 +79,21 @@ export async function getAuthUser(request) {
   }
 }
 
-// Auth guard — throws if not authenticated
+// Authentication guard - throws error if user not authenticated
 export async function requireAuth(request) {
   const user = await getAuthUser(request);
   if (!user) throw authError('Authentication required');
   return user;
 }
 
-// Role guard — throws if wrong role
+// Role-based authorization guard - throws error if user lacks required role
 export async function requireRole(request, role) {
   const user = await requireAuth(request);
   if (user.role !== role) throw authError('Access denied', 'FORBIDDEN', 403);
   return user;
 }
 
-// Active non-admin user guard (for interactions like like/favorite/review)
+// Active non-admin user guard for user interactions (like, favorite, review)
 export async function requireActiveUser(request) {
   const user = await requireAuth(request);
   if (user.status !== 'active') throw authError('Account not active', 'FORBIDDEN', 403);
@@ -94,7 +101,7 @@ export async function requireActiveUser(request) {
   return user;
 }
 
-// Set auth cookies on response
+// Set authentication cookies on response (access, refresh, CSRF)
 export function setAuthCookies(response, accessToken, refreshToken) {
   const isProduction = process.env.NODE_ENV === 'production';
   const secure = isProduction ? ' Secure;' : '';
@@ -107,7 +114,7 @@ export function setAuthCookies(response, accessToken, refreshToken) {
   return response;
 }
 
-// Clear auth cookies
+// Clear all authentication cookies
 export function clearAuthCookies(response) {
   response.headers.append('Set-Cookie', `${COOKIE_ACCESS}=; HttpOnly; Path=/; Max-Age=0`);
   response.headers.append('Set-Cookie', `${COOKIE_REFRESH}=; HttpOnly; Path=/api/v1/auth/refresh; Max-Age=0`);

@@ -1,3 +1,4 @@
+// API route for recipe by ID - handles GET, PATCH update, and DELETE
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errors, safeErrorResponse } from '@/lib/response.js';
 import { getAuthUser, requireAuth } from '@/lib/auth.js';

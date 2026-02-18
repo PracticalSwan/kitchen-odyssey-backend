@@ -1,3 +1,4 @@
+// Migration utility - imports localStorage JSON snapshot into MongoDB
 /**
  * Migration utility: imports localStorage JSON snapshot into MongoDB.
  *

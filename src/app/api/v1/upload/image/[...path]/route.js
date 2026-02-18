@@ -1,3 +1,4 @@
+// API route for image deletion - handles DELETE uploaded file removal by admin
 import { connectDB } from '@/lib/db.js';
 import { requireRole } from '@/lib/auth.js';
 import { errors, safeErrorResponse, successResponse } from '@/lib/response.js';

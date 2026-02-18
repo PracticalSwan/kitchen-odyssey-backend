@@ -1,3 +1,4 @@
+// Rollback utility - reverses a migration batch using its rollback artifact
 /**
  * Rollback utility: reverses a migration batch using its rollback artifact.
  *

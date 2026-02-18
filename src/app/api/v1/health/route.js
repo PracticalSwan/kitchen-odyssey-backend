@@ -1,4 +1,4 @@
-// Health check endpoint
+// Health check endpoint - returns service availability status
 import { connectDB } from '@/lib/db.js';
 import { successResponse, errorResponse } from '@/lib/response.js';
 
