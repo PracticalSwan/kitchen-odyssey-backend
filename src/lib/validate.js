@@ -30,6 +30,13 @@ function fail(error) {
   return { valid: false, error };
 }
 
+function validateRequiredSanitizedString(val, requiredMessage, emptyMessage, maxLength) {
+  if (typeof val !== 'string') return fail(requiredMessage);
+  const v = sanitizeString(val, maxLength);
+  if (v.length < 1) return fail(emptyMessage);
+  return ok(v);
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-zA-Z0-9_]{2,30}$/;
 
@@ -57,23 +64,19 @@ export const schemas = {
   },
 
   recipeTitle(val) {
-    if (typeof val !== 'string') return fail('Title is required');
-    const v = sanitizeString(val, 200);
-    if (v.length < 1) return fail('Title cannot be empty');
-    return ok(v);
+    return validateRequiredSanitizedString(val, 'Title is required', 'Title cannot be empty', 200);
   },
 
   comment(val) {
-    if (typeof val !== 'string') return fail('Comment is required');
-    const v = sanitizeString(val, 2000);
-    if (v.length < 1) return fail('Comment cannot be empty');
-    return ok(v);
+    return validateRequiredSanitizedString(val, 'Comment is required', 'Comment cannot be empty', 2000);
   },
 
   searchQuery(val) {
-    if (typeof val !== 'string') return fail('Search query is required');
-    const v = sanitizeString(val, 200);
-    if (v.length < 1) return fail('Search query cannot be empty');
-    return ok(v);
+    return validateRequiredSanitizedString(
+      val,
+      'Search query is required',
+      'Search query cannot be empty',
+      200
+    );
   },
 };
