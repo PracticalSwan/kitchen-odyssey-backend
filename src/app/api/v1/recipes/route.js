@@ -47,6 +47,9 @@ export async function GET(request) {
       filter.status = status;
     } else if (authUser?.role === "admin") {
       // Admin sees all
+    } else if (authorId && authUser?.userId && authorId === authUser.userId) {
+      // Users can see all their own recipes (pending, rejected, published)
+      if (status) filter.status = status;
     } else {
       filter.status = "published";
     }
