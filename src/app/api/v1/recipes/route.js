@@ -5,7 +5,7 @@ import { getAuthUser, requireAuth } from "@/lib/auth.js";
 import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
 import { rateLimit, rateLimitResponse } from "@/lib/rateLimit.js";
 import { sanitizeString } from "@/lib/validate.js";
-import { Recipe, Review } from "@/models/index.js";
+import { Recipe, Review, ActivityLog, User } from "@/models/index.js";
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -164,7 +164,25 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const recipeId = `recipe-${Date.now().toString(36)}`;
+
+    // Generate sequential recipe ID (recipe-1, recipe-2, ...)
+    const lastRecipe = await Recipe.findOne(
+      { _id: { $regex: /^recipe-\d+$/ } },
+      { _id: 1 },
+      { sort: { _id: -1 } },
+    ).lean();
+    let nextNum = 1;
+    if (lastRecipe) {
+      // Extract all numeric recipe IDs and find the max
+      const allNumeric = await Recipe.find(
+        { _id: { $regex: /^recipe-\d+$/ } },
+        { _id: 1 },
+      ).lean();
+      nextNum =
+        Math.max(...allNumeric.map((r) => parseInt(r._id.split("-")[1], 10))) +
+        1;
+    }
+    const recipeId = `recipe-${nextNum}`;
 
     const recipe = await Recipe.create({
       _id: recipeId,
@@ -201,6 +219,20 @@ export async function POST(request) {
       likedBy: [],
       viewedBy: [],
     });
+
+    // Log user activity (non-blocking)
+    try {
+      const author = await User.findById(authUser.userId, "username").lean();
+      const authorName = author?.username || "A user";
+      await ActivityLog.create({
+        _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: "user-recipe",
+        message: `${authorName} submitted a new recipe "${recipe.title}"`,
+        userId: authUser.userId,
+        targetId: recipeId,
+        metadata: { action: "create" },
+      });
+    } catch { /* activity logging is non-critical */ }
 
     return successResponse(
       { recipe: recipe.toJSON() },

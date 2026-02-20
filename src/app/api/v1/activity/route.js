@@ -27,9 +27,18 @@ export async function GET(request) {
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const skip = (page - 1) * limit;
 
+    // Optional type filter: "admin" matches admin-*, "user" matches user-*
+    const typeFilter = searchParams.get("type");
+    const filter = {};
+    if (typeFilter === "admin") {
+      filter.type = { $regex: /^admin-/ };
+    } else if (typeFilter === "user") {
+      filter.type = { $regex: /^user-/ };
+    }
+
     const [items, total] = await Promise.all([
-      ActivityLog.find().sort({ time: -1 }).skip(skip).limit(limit).lean(),
-      ActivityLog.countDocuments(),
+      ActivityLog.find(filter).sort({ time: -1 }).skip(skip).limit(limit).lean(),
+      ActivityLog.countDocuments(filter),
     ]);
 
     return successResponse(

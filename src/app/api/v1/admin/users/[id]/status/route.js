@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db.js";
 import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
 import { requireRole } from "@/lib/auth.js";
 import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
-import { User } from "@/models/index.js";
+import { User, ActivityLog } from "@/models/index.js";
 
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -15,7 +15,7 @@ export async function PATCH(request, { params }) {
 
   try {
     await connectDB();
-    await requireRole(request, "admin");
+    const authUser = await requireRole(request, "admin");
     const { id } = await params;
 
     const { status } = await request.json();
@@ -31,6 +31,21 @@ export async function PATCH(request, { params }) {
     if (!user) {
       return errors.notFound("User not found", cors);
     }
+
+    // Log admin activity
+    try {
+      const admin = await User.findById(authUser.userId, "username").lean();
+      const adminName = admin?.username || "Admin";
+      const label = status === "active" ? "approved" : status === "suspended" ? "suspended" : `set status to ${status} for`;
+      await ActivityLog.create({
+        _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: "admin-user",
+        message: `${adminName} ${label} ${user.username}`,
+        userId: authUser.userId,
+        targetId: id,
+        metadata: { action: "status-change", status },
+      });
+    } catch { /* activity logging is non-critical */ }
 
     return successResponse(user, "User status updated", 200, cors);
   } catch (err) {

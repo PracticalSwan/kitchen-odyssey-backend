@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db.js";
 import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
 import { getAuthUser, requireAuth } from "@/lib/auth.js";
 import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
-import { User } from "@/models/index.js";
+import { User, ActivityLog } from "@/models/index.js";
 import { absolutePathFromPublicUrl, deleteFileIfExists } from "@/lib/files.js";
 import { sanitizeString } from "@/lib/validate.js";
 
@@ -102,6 +102,23 @@ export async function PATCH(request, { params }) {
     });
     if (!user) {
       return errors.notFound("User not found", cors);
+    }
+
+    
+    if (authUser.role === "admin" && authUser.userId !== id && body.status !== undefined) {
+      try {
+        const admin = await User.findById(authUser.userId, "username").lean();
+        const adminName = admin?.username || "Admin";
+        const label = body.status === "active" ? "approved" : body.status === "suspended" ? "suspended" : `set status to ${body.status} for`;
+        await ActivityLog.create({
+          _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: "admin-user",
+          message: `${adminName} ${label} ${user.username}`,
+          userId: authUser.userId,
+          targetId: id,
+          metadata: { action: "status-change", status: body.status },
+        });
+      } catch { /* activity logging is non-critical */ }
     }
 
     return successResponse(

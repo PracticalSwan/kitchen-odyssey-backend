@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db.js";
 import { successResponse, errors, safeErrorResponse } from "@/lib/response.js";
 import { getAuthUser, requireAuth } from "@/lib/auth.js";
 import { getCorsHeaders, handleOptions } from "@/lib/cors.js";
-import { Recipe, Review, User } from "@/models/index.js";
+import { Recipe, Review, User, ActivityLog } from "@/models/index.js";
 import { absolutePathFromPublicUrl, deleteFileIfExists } from "@/lib/files.js";
 import { sanitizeString } from "@/lib/validate.js";
 
@@ -130,7 +130,50 @@ export async function PATCH(request, { params }) {
       }
     }
 
+    // Non-admin editing a published recipe → revert to pending for re-review
+    const wasPublished = authUser.role !== "admin" && recipe.status === "published";
+    if (wasPublished) {
+      recipe.status = "pending";
+    }
+
     await recipe.save();
+
+    // Log activity: admin status change vs user edit
+    try {
+      const actor = await User.findById(authUser.userId, "username").lean();
+      const actorName = actor?.username || "A user";
+      const isAdminAction = authUser.role === "admin" && body.status !== undefined;
+      if (wasPublished) {
+        await ActivityLog.create({
+          _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: "user-recipe",
+          message: `${actorName} updated published recipe "${recipe.title}"`,
+          userId: authUser.userId,
+          targetId: id,
+          metadata: { action: "resubmit", previousStatus: "published" },
+        });
+      } else if (isAdminAction) {
+        const label = body.status === "published" ? "approved" : body.status === "rejected" ? "rejected" : `set status to ${body.status} for`;
+        await ActivityLog.create({
+          _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: "admin-recipe",
+          message: `${actorName} ${label} "${recipe.title}"`,
+          userId: authUser.userId,
+          targetId: id,
+          metadata: { action: "status-change", status: body.status },
+        });
+      } else {
+        await ActivityLog.create({
+          _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: "user-recipe",
+          message: `${actorName} updated recipe "${recipe.title}"`,
+          userId: authUser.userId,
+          targetId: id,
+          metadata: { action: "update" },
+        });
+      }
+    } catch { /* activity logging is non-critical */ }
+
     return successResponse(
       { recipe: recipe.toJSON() },
       "Recipe updated",
@@ -174,6 +217,23 @@ export async function DELETE(request, { params }) {
     ]);
 
     await Recipe.findByIdAndDelete(id);
+
+    // Log admin deletion activity
+    if (authUser.role === "admin") {
+      try {
+        const admin = await User.findById(authUser.userId, "username").lean();
+        const adminName = admin?.username || "Admin";
+        await ActivityLog.create({
+          _id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: "admin-recipe",
+          message: `${adminName} deleted recipe "${recipe.title}"`,
+          userId: authUser.userId,
+          targetId: id,
+          metadata: { action: "delete" },
+        });
+      } catch { /* activity logging is non-critical */ }
+    }
+
     return successResponse(null, "Recipe deleted", 200, cors);
   } catch (err) {
     return safeErrorResponse(err, cors);
