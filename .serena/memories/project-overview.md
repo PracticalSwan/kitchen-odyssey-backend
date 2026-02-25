@@ -15,7 +15,7 @@
 - **MongoDB Atlas** via Mongoose 9.2.1 ODM
 - **Auth:** JWT in HttpOnly cookies (`ko_access` 15m, `ko_refresh` 7d), bcryptjs
 - **6 Mongoose models:** User, Recipe, Review, SearchHistory, DailyStat, ActivityLog
-- **Testing:** Vitest + @vitest/coverage-v8 — **82 tests passing** (8 test files)
+- **Validation:** ESLint + Next.js production build checks are the active quality workflow
 
 ## Backend Libraries (`src/lib/`)
 - `config.js` — Environment configuration (MongoDB, JWT, CORS, rate limits, image)
@@ -64,4 +64,4 @@ Seeded data (migrated from `Kitchen_Odyssey/src/lib/storage.js`):
 Image storage: local filesystem (`uploads/` directory), served via `IMAGE_PUBLIC_URL_BASE`.
 
 ## Last Updated
-2026-02-18 — Phase 6 complete, 82 tests passing, MongoDB seeded with all localStorage data
+2026-02-26 — Test tooling removed from active workflow; lint/build validation retained

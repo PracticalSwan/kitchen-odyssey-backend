@@ -7,9 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
     "fix-connections": "powershell -ExecutionPolicy Bypass -File scripts\\fix-connections.ps1"
   },
   "dependencies": {
@@ -25,9 +22,7 @@
     "validator": "^13.15.26"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "vitest": "^4.0.18"
+    "eslint-config-next": "16.1.6"
   }
 }

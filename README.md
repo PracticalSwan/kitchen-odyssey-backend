@@ -2,7 +2,6 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
-![Vitest Tests](https://img.shields.io/badge/Tests-87%20Passing-green)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
 API backend for Kitchen Odyssey — built with Next.js 16 App Router, MongoDB Atlas, and comprehensive security features.
@@ -44,7 +43,6 @@ Kitchen Odyssey Backend provides a RESTful API for the recipe-sharing platform w
 - **JWT 9.0.3** - Authentication tokens
 - **bcryptjs 3.0.3** - Password hashing
 - **Sharp 0.34.5** - Image processing and thumbnails
-- **Vitest 4.0.18** - Unit testing with coverage
 
 ## Getting Started
 
@@ -202,21 +200,12 @@ The backend also always allows both of these origins for VM deployment compatibi
 - Path traversal protection
 - Authorization check before deletion
 
-## Testing
+## Quality Checks
 
 ```bash
-npm test              # Run all tests
-npm run test:watch    # Watch mode (auto-rerun on changes)
-npm run test:coverage # With coverage report
+npm run lint
+npm run build
 ```
-
-**Test Coverage: 87 tests**
-- Authentication flows (signup, login, logout, refresh)
-- Recipe CRUD operations
-- Engagement features (likes, favorites, reviews)
-- Admin endpoints and authorization
-- Rate limiting and security
-- Input validation and error handling
 
 ## Docker Deployment (Production)
 
@@ -261,7 +250,6 @@ kitchen-odyssey-backend/
 │   └── scripts/          # Database seed scripts
 ├── docs/
 │   └── openapi.yaml      # API contract specification
-├── tests/                # Vitest test files
 ├── uploads/              # Local filesystem storage
 └── public/               # Static assets
 ```
@@ -359,6 +347,6 @@ npm run start
 ```
 
 **Deployment Targets:**
-- Vercel (recommended for Next.js)
+- Azure VM with Docker Compose (see `DEPLOYMENT_AZURE_VM.md`)
 - Railway, Render, or other Node.js hosting
 - Azure App Service with Node.js runtime
