@@ -13,7 +13,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - backend_uploads:/app/uploads
+      - ./uploads:/app/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/v1/health >/dev/null || exit 1"]
@@ -46,9 +46,6 @@ services:
       start_period: 15s
     networks:
       - kitchen_odyssey_net
-
-volumes:
-  backend_uploads:
 
 networks:
   kitchen_odyssey_net:

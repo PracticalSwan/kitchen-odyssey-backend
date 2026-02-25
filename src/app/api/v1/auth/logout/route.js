@@ -33,13 +33,13 @@ export async function POST(request) {
       200,
       cors,
     );
-    clearAuthCookies(response);
+    clearAuthCookies(response, request);
     return response;
   } catch (err) {
     // Handle expired tokens gracefully by clearing cookies
     if (err.status === 401) {
       const response = successResponse(null, "Logged out", 200, cors);
-      clearAuthCookies(response);
+      clearAuthCookies(response, request);
       return response;
     }
     return safeErrorResponse(err, cors);

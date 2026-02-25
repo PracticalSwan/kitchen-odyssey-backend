@@ -15,6 +15,7 @@ Kitchen Odyssey Backend provides a RESTful API for the recipe-sharing platform w
 
 **Authentication & Security**
 - JWT tokens in HttpOnly cookies (access: 15min, refresh: 7d)
+- Cookie `Secure` attribute is protocol-aware (auto HTTPS detection; optional override via `COOKIE_SECURE`)
 - bcrypt password hashing (10 rounds)
 - Login validates email format plus non-empty password; password complexity is enforced during signup
 - Role-based access control (Admin, Contributor, Guest/Pending)
@@ -84,6 +85,7 @@ npm run start
 | `MONGODB_URI` | MongoDB Atlas connection string | `mongodb+srv://cluster.mongodb.net/kitchen_odyssey` |
 | `JWT_SECRET` | Secret for JWT signing | `your-secret-key-min-32-chars` |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins | `http://localhost:5173,https://yourdomain.com` |
+| `COOKIE_SECURE` | Optional override for auth cookie `Secure` flag (`true`/`false`/unset auto) | `true` |
 
 The backend also always allows both of these origins for VM deployment compatibility:
 - `http://kitchenodyssey.eastasia.cloudapp.azure.com`
@@ -165,6 +167,7 @@ The backend also always allows both of these origins for VM deployment compatibi
 
 **Authentication & Authorization**
 - HttpOnly + SameSite cookies for JWT tokens
+- `Secure` flag auto-detected from request protocol (or forced with `COOKIE_SECURE`)
 - Access token: 15 minutes, Refresh token: 7 days
 - bcrypt password hashing (10 rounds)
 - Role-based access control on protected routes

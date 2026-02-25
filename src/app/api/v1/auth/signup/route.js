@@ -108,7 +108,7 @@ export async function POST(request) {
       cors,
     );
 
-    setAuthCookies(response, accessToken, refreshToken);
+    setAuthCookies(response, accessToken, refreshToken, request);
     return response;
   } catch (err) {
     return safeErrorResponse(err, cors);

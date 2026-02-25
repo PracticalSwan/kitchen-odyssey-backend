@@ -9,6 +9,7 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN mkdir -p /app/public /app/uploads
 RUN npm run build
 
 FROM node:20-alpine AS runner

@@ -31,8 +31,9 @@ export async function POST(request) {
   try {
     // Connect to database
     await connectDB();
-    const cookieStore = await cookies();
-    const refreshToken = cookieStore.get("ko_refresh")?.value;
+    const refreshToken =
+      request.cookies?.get("ko_refresh")?.value ||
+      (await cookies()).get("ko_refresh")?.value;
 
     // Validate refresh token exists
     if (!refreshToken) {
@@ -84,7 +85,7 @@ export async function POST(request) {
     );
 
     // Set cookies and return response
-    setAuthCookies(response, newAccessToken, refreshToken);
+    setAuthCookies(response, newAccessToken, refreshToken, request);
     return response;
   } catch (err) {
     return safeErrorResponse(err, cors);

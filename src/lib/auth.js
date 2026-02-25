@@ -18,6 +18,37 @@ const COOKIE_ACCESS = "ko_access";
 const COOKIE_REFRESH = "ko_refresh";
 const COOKIE_CSRF = "ko_csrf";
 
+function isSecureRequest(request) {
+  if (!request) return false;
+
+  const forwardedProto = request.headers?.get?.("x-forwarded-proto");
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0].trim().toLowerCase() === "https";
+  }
+
+  const forwarded = request.headers?.get?.("forwarded");
+  if (forwarded && /proto=https/i.test(forwarded)) {
+    return true;
+  }
+
+  const urlProtocol = request.nextUrl?.protocol || (() => {
+    try {
+      return new URL(request.url).protocol;
+    } catch {
+      return "";
+    }
+  })();
+
+  return urlProtocol === "https:";
+}
+
+function shouldUseSecureCookies(request) {
+  const explicit = (process.env.COOKIE_SECURE || "").trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(explicit)) return true;
+  if (["0", "false", "no", "off"].includes(explicit)) return false;
+  return isSecureRequest(request);
+}
+
 // Generate short-lived JWT access token (15 minutes)
 export function generateAccessToken(user) {
   return jwt.sign(
@@ -62,11 +93,36 @@ function authError(message, code = "UNAUTHORIZED", status = 401) {
   return err;
 }
 
+function parseCookieHeader(cookieHeader, cookieName) {
+  if (!cookieHeader || !cookieName) return null;
+  const pairs = cookieHeader.split(";");
+  for (const pair of pairs) {
+    const [rawKey, ...rawValue] = pair.trim().split("=");
+    if (rawKey === cookieName) {
+      return rawValue.join("=") || null;
+    }
+  }
+  return null;
+}
+
+async function getCookieValue(request, cookieName) {
+  const fromRequest = request?.cookies?.get?.(cookieName)?.value;
+  if (fromRequest) return fromRequest;
+
+  const fromHeader = parseCookieHeader(
+    request?.headers?.get?.("cookie"),
+    cookieName,
+  );
+  if (fromHeader) return fromHeader;
+
+  const cookieStore = await cookies();
+  return cookieStore.get(cookieName)?.value || null;
+}
+
 // Extract and verify user from request cookies, returns user payload or null
 export async function getAuthUser(request) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_ACCESS)?.value;
+    const token = await getCookieValue(request, COOKIE_ACCESS);
     if (!token) return null;
 
     const decoded = verifyToken(token);
@@ -120,9 +176,8 @@ export async function requireActiveUser(request) {
 }
 
 // Set authentication cookies on response (access, refresh, CSRF)
-export function setAuthCookies(response, accessToken, refreshToken) {
-  const isProduction = process.env.NODE_ENV === "production";
-  const secure = isProduction ? " Secure;" : "";
+export function setAuthCookies(response, accessToken, refreshToken, request) {
+  const secure = shouldUseSecureCookies(request) ? " Secure;" : "";
   const csrfToken = randomUUID();
 
   response.headers.append(
@@ -142,15 +197,19 @@ export function setAuthCookies(response, accessToken, refreshToken) {
 }
 
 // Clear all authentication cookies
-export function clearAuthCookies(response) {
+export function clearAuthCookies(response, request) {
+  const secure = shouldUseSecureCookies(request) ? " Secure;" : "";
   response.headers.append(
     "Set-Cookie",
-    `${COOKIE_ACCESS}=; HttpOnly; Path=/; Max-Age=0`,
+    `${COOKIE_ACCESS}=; HttpOnly;${secure} SameSite=Lax; Path=/; Max-Age=0`,
   );
   response.headers.append(
     "Set-Cookie",
-    `${COOKIE_REFRESH}=; HttpOnly; Path=/api/v1/auth/refresh; Max-Age=0`,
+    `${COOKIE_REFRESH}=; HttpOnly;${secure} SameSite=Lax; Path=/api/v1/auth/refresh; Max-Age=0`,
   );
-  response.headers.append("Set-Cookie", `${COOKIE_CSRF}=; Path=/; Max-Age=0`);
+  response.headers.append(
+    "Set-Cookie",
+    `${COOKIE_CSRF}=;${secure} SameSite=Lax; Path=/; Max-Age=0`,
+  );
   return response;
 }

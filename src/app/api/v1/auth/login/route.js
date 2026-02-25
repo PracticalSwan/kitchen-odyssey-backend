@@ -100,7 +100,7 @@ export async function POST(request) {
     );
 
     // Set HttpOnly cookies with tokens
-    setAuthCookies(response, accessToken, refreshToken);
+    setAuthCookies(response, accessToken, refreshToken, request);
     return response;
   } catch (err) {
     return safeErrorResponse(err, cors);
