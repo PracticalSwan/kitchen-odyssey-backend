@@ -40,10 +40,6 @@ yarn-error.log*
 # docker
 docker-compose.override.yml
 
-# uploads (local dev)
-/uploads
-!/uploads/.gitkeep
-
 # vercel
 .vercel
 
