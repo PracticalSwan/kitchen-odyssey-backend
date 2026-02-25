@@ -85,6 +85,10 @@ npm run start
 | `JWT_SECRET` | Secret for JWT signing | `your-secret-key-min-32-chars` |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins | `http://localhost:5173,https://yourdomain.com` |
 
+The backend also always allows both of these origins for VM deployment compatibility:
+- `http://kitchenodyssey.eastasia.cloudapp.azure.com`
+- `https://kitchenodyssey.eastasia.cloudapp.azure.com`
+
 > [!WARNING]
 > Never commit `.env.local` to version control. Use strong secrets in production.
 
@@ -210,6 +214,22 @@ npm run test:coverage # With coverage report
 - Admin endpoints and authorization
 - Rate limiting and security
 - Input validation and error handling
+
+## Docker Deployment (Production)
+
+Use `docker-compose.prod.yml` to run frontend + backend together:
+
+```bash
+# from kitchen-odyssey-backend/
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Backend-specific notes:
+- Create `kitchen-odyssey-backend/.env` from `.env.example` before starting containers.
+- Uploaded files are persisted in Docker volume `backend_uploads`.
+- Service is reachable internally as `http://backend:3000` (proxied by frontend Nginx).
+- Default frontend path is sibling repo `../Kitchen_Odyssey`; override with `FRONTEND_CONTEXT` if needed.
 
 ## Project Structure
 

@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kitchen-odyssey-backend:latest
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    expose:
+      - "3000"
+    volumes:
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/v1/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - kitchen_odyssey_net
+
+  frontend:
+    build:
+      context: ${FRONTEND_CONTEXT:-../Kitchen_Odyssey}
+      dockerfile: Dockerfile
+      args:
+        VITE_USE_BACKEND_API: "true"
+        VITE_API_BASE_URL: /api/v1
+    image: kitchen-odyssey-frontend:latest
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - kitchen_odyssey_net
+
+volumes:
+  backend_uploads:
+
+networks:
+  kitchen_odyssey_net:
+    driver: bridge

@@ -3,6 +3,21 @@
 // Required environment variables for application startup
 const requiredVars = ["MONGODB_URI", "JWT_SECRET", "ALLOWED_ORIGINS"];
 
+const requiredPublicOrigins = [
+  "http://kitchenodyssey.eastasia.cloudapp.azure.com",
+  "https://kitchenodyssey.eastasia.cloudapp.azure.com",
+];
+
+function parseAllowedOrigins(originsCsv) {
+  const fromEnv = (originsCsv || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  // Keep required public DNS origins always available for Azure VM deployments.
+  return Array.from(new Set([...fromEnv, ...requiredPublicOrigins]));
+}
+
 // Validate that all required environment variables are set
 export function validateRequiredEnv(options = {}) {
   const skipDuringBuild = options.skipDuringBuild !== false;
@@ -34,10 +49,7 @@ export const config = {
     refreshTokenExpiry: "7d",
   },
   cors: {
-    allowedOrigins: (process.env.ALLOWED_ORIGINS || "")
-      .split(",")
-      .map((o) => o.trim())
-      .filter(Boolean),
+    allowedOrigins: parseAllowedOrigins(process.env.ALLOWED_ORIGINS),
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
