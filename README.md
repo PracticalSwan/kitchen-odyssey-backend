@@ -6,6 +6,12 @@
 
 API backend for Kitchen Odyssey — built with Next.js 16 App Router, MongoDB Atlas, and comprehensive security features.
 
+## Members
+
+- **Sithu Win San**
+
+- **Aung Thura Hein**
+- 
 ## Overview
 
 Kitchen Odyssey Backend provides a RESTful API for the recipe-sharing platform with JWT-based authentication, role-based access control, and real-time analytics. The backend supports secure user management, moderated recipe publication, engagement tracking (likes, favorites, reviews), and comprehensive admin controls.
