@@ -28,6 +28,9 @@ export async function GET(request) {
     // Return user profile
     return successResponse({ user: user.toJSON() }, null, 200, cors);
   } catch (err) {
+    if (err?.status === 401 || err?.code === "UNAUTHORIZED") {
+      return successResponse({ user: null }, null, 200, cors);
+    }
     return safeErrorResponse(err, cors);
   }
 }

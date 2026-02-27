@@ -17,6 +17,43 @@ import { schemas, sanitizeString } from "@/lib/validate.js";
 import { User } from "@/models/index.js";
 import bcrypt from "bcryptjs";
 
+function toUsernameBase(value) {
+  if (typeof value !== "string") return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_\s]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 30);
+}
+
+async function buildUniqueUsername({ username, firstName, lastName, email }) {
+  const candidates = [
+    toUsernameBase(username),
+    toUsernameBase(`${firstName || ""}_${lastName || ""}`),
+    toUsernameBase((email || "").split("@")[0] || ""),
+    `user_${Date.now().toString(36)}`,
+  ].filter(Boolean);
+
+  let base = candidates[0] || `user_${Date.now().toString(36)}`;
+  if (!schemas.username(base).valid) {
+    base = `user_${Date.now().toString(36)}`;
+  }
+
+  let attempt = 0;
+  while (attempt < 20) {
+    const suffix = attempt === 0 ? "" : `_${attempt}`;
+    const maxBaseLength = 30 - suffix.length;
+    const candidate = `${base.slice(0, maxBaseLength)}${suffix}`;
+    const exists = await User.exists({ username: candidate });
+    if (!exists) return candidate;
+    attempt += 1;
+  }
+
+  return `user_${Date.now().toString(36)}_${Math.floor(Math.random() * 1000)}`.slice(0, 30);
+}
+
 // Handle CORS preflight requests
 export async function OPTIONS(request) {
   return handleOptions(request);
@@ -48,7 +85,13 @@ export async function POST(request) {
 
     // Validate input fields
     const validationErrors = [];
-    const usernameCheck = schemas.username(username);
+    const resolvedUsername = await buildUniqueUsername({
+      username,
+      firstName,
+      lastName,
+      email,
+    });
+    const usernameCheck = schemas.username(resolvedUsername);
     const emailCheck = schemas.email(email);
     const passCheck = schemas.password(password);
     if (!usernameCheck.valid) validationErrors.push(usernameCheck.error);
